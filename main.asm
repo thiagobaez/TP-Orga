@@ -97,7 +97,7 @@ arriba:
     mov    [nuevaPosicion],rdx
     mov    rdx,[posZorro+8]
     mov    [nuevaPosicion+8],rdx
-    jmp    mover
+    jmp    verificarSiLaPosicionEsValida
  
 abajo:
     mov    rdx,[posZorro]
@@ -105,7 +105,7 @@ abajo:
     mov    [nuevaPosicion],rdx
     mov    rdx,[posZorro+8]
     mov    [nuevaPosicion+8],rdx
-    jmp    mover
+    jmp    verificarSiLaPosicionEsValida
 
 derecha:
     mov    rdx,[posZorro]
@@ -113,7 +113,7 @@ derecha:
     mov    rdx,[posZorro+8]
     inc    rdx
     mov    [nuevaPosicion+8],rdx
-    jmp    mover
+    jmp    verificarSiLaPosicionEsValida
 
 izquierda:
     mov    rdx,[posZorro]
@@ -121,7 +121,7 @@ izquierda:
     mov    rdx,[posZorro+8]
     dec    rdx
     mov    [nuevaPosicion+8],rdx
-    jmp    mover
+    jmp    verificarSiLaPosicionEsValida
 
 noroeste:
     mov    rdx,[posZorro]
@@ -130,7 +130,7 @@ noroeste:
     mov    rdx,[posZorro+8]
     dec    rdx
     mov    [nuevaPosicion+8],rdx
-    jmp    mover
+    jmp    verificarSiLaPosicionEsValida
 
 noreste:
     mov    rdx,[posZorro]
@@ -139,7 +139,7 @@ noreste:
     mov    rdx,[posZorro+8]
     inc    rdx
     mov    [nuevaPosicion+8],rdx
-    jmp    mover
+    jmp    verificarSiLaPosicionEsValida
 
 suroeste:
     mov    rdx,[posZorro]
@@ -148,7 +148,7 @@ suroeste:
     mov    rdx,[posZorro+8]
     dec    rdx
     mov    [nuevaPosicion+8],rdx
-    jmp    mover
+    jmp    verificarSiLaPosicionEsValida
 
 sureste:
     mov    rdx,[posZorro]
@@ -157,8 +157,20 @@ sureste:
     mov    rdx,[posZorro+8]
     inc    rdx
     mov    [nuevaPosicion+8],rdx
-    jmp    mover
+    jmp    verificarSiLaPosicionEsValida
 
 verificarAntesDeMover:
     mPuts txtPosicionInvalida
     jmp   moverPieza
+
+verificarSiLaPosicionEsValida:
+    cmp     qword[nuevaPosicion],0
+    jl      verificarAntesDeMover
+    cmp     qword[nuevaPosicion],7
+    jge     verificarAntesDeMover
+    cmp     qword[nuevaPosicion+8],0
+    jl      verificarAntesDeMover
+    cmp     qword[nuevaPosicion+8],7
+    jge     verificarAntesDeMover
+    jmp     mover
+    
