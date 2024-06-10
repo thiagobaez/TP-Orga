@@ -27,6 +27,12 @@
     add     rsp,8
 %endmacro
 
+%macro mImprimirNumeroFila 0
+    sub     rsp,8
+    call    imprimirNumeroFila
+    add     rsp,8
+%endmacro
+
 extern  printf
 extern  puts
 extern  gets
