@@ -6,7 +6,6 @@ extern printMatriz
 
 section .data
     bienvenido db  "Bienvenido!",0
-    txtError   db   "¡ERROR!",0
     txtSiguientePos db "Ingrese la siguiente posición: ",0
     txtPosicionInvalida db "Posicion inválida.",0
     txtCantidadDeOcasMuertas db "Cantidad de ocas muertas: %d",10,0
@@ -19,7 +18,8 @@ section .data
            db "O"," "," ","X"," "," ","O",
            db -1,-1,  " "," "," ",  -1,-1,
            db -1,-1,  " "," "," ",  -1,-1
-    cantOcasMuertas dq 0
+    cantOcasMuertas db 0
+    cantMovimientosZorro db 0
     posZorro dq 4,3
     turnoZorro db "Turno del zorro:",0
     turnoOca db "Turno de la oca:",0
@@ -41,14 +41,10 @@ inicio:
 
 
     mPrintMatriz matriz
-    mPuts   turnoZorro
+    mPuts   turnoOca
     sub     rsp,8
-    call    moverZorro
+    call    moverOca
     add     rsp,8
-
-    mov     rdi,txtCantidadDeOcasMuertas
-    mov     rsi,[cantOcasMuertas]
-    mPrintf
     cmp     qword[cantOcasMuertas],12
      
     jne     inicio
@@ -76,7 +72,7 @@ moverZorro:
     je     suroeste
     cmp    byte[posicionSiguiente],"X"
     je     sureste
-    jmp    moverZorro
+    jmp    msgMovimientoInvalidoZorro
 
 movimientoValidoZorro:
 
@@ -95,6 +91,7 @@ movimientoValidoZorro:
     mov     rdx,[nuevaPosicion+8]
     mov     [posZorro+8],rdx
 
+    inc    byte[cantMovimientosZorro]
 
     ret
 
@@ -123,7 +120,7 @@ calcularMovimientoZorro:
     mov    byte[matriz+rdx+rax]," "
     mov    [nuevaPosicion],r12
     mov    [nuevaPosicion+8],r13
-    inc    qword[cantOcasMuertas]
+    inc    byte[cantOcasMuertas]
     jmp    movimientoValidoZorro
 
 arriba:
@@ -190,13 +187,12 @@ msgMovimientoInvalidoZorro:
     mPuts txtPosicionInvalida
     jmp   moverZorro
 
-;------------------------------------------------------------------------- OCA
-;FIJATE LO DEL ZORRO ANTES DE SEGUIR, JMP Y RET 
+;-------------------------------- OCA ----------------------------------------- 
 
 moverOca:
     mPuts   txtIngresePosOca
     mGets   stringAux
-    mSscanf2 stringAux,formato,posOca, posOca+8
+    mSscanf2 stringAux,formato,posOca,posOca+8
     cmp     rax,2
     jne     moverOca
     dec     qword[posOca]
@@ -208,35 +204,6 @@ moverOca:
     cmp     byte[matriz+rdx+rax],"O"
     jne     printError ;Comparo el valor de la matriz en la posición ingresada y verifico si hay una oca
     
-    jmp     seleccionarOpcionOca
-
-movimientoValidoOca:
-    mov     rdx,[nuevaPosicion]
-    imul    rdx,7
-    mov     rax,[nuevaPosicion+8]
-    cmp     byte[matriz+rdx+rax],-1
-    je      posicionInvalidaOca
-    mov     cl,"O"
-    mov     [matriz+rdx+rax],cl
-
-    mov     rdx,[posOca]
-    imul    rdx,7
-    mov     rax,[posOca+8]
-    mov     cl," "
-    mov     [matriz+rdx+rax],cl
-
-    mov     rdx,[nuevaPosicion]
-    mov     [posOca],rdx
-    mov     rdx,[nuevaPosicion+8]
-    mov     [posOca+8],rdx
-
-    ret
-
-
-printError:
-    mPuts txtError
-    jmp   moverOca
-
 seleccionarOpcionOca:
     mPuts  txtSiguientePos
     mGets  posicionSiguiente
@@ -246,44 +213,56 @@ seleccionarOpcionOca:
     je     izquierdaOca
     cmp    byte[posicionSiguiente],"D"
     je     derechaOca
-    jmp    seleccionarOpcionOca
+    jmp    printError
+
+movimientoValidoOca:
+
+    mov     rdx,[nuevaPosicion]
+    imul    rdx,7
+    mov     rax,[nuevaPosicion+8]
+    mov     byte[matriz+rdx+rax],"O"
+
+    mov     rdx,[posOca]
+    imul    rdx,7
+    mov     rax,[posOca+8]
+    mov     byte[matriz+rdx+rax]," "
+
+    mov     rdx,[nuevaPosicion]
+    mov     [posOca],rdx
+    mov     rdx,[nuevaPosicion+8]
+    mov     [posOca+8],rdx
+
+    ret
+
+calcularMovimientoOca:
+    mov    r12,[posOca]
+    mov    r13,[posOca+8]
+    add    r12,r10
+    add    r13,r11
+    call   verificarSiLaPosicionEsValida
+    cmp    ax,1
+    jne    printError
+    mov    [nuevaPosicion],r12
+    mov    [nuevaPosicion+8],r13
+    mHayEspacioLibre? r12, r13
+    je     movimientoValidoOca
+    jmp    printError
 
 abajoOca:
-    mov    rdx,[posOca]
-    inc    rdx
-    mov    [nuevaPosicion],rdx
-    mov    rdx,[posOca+8]
-    mov    [nuevaPosicion+8],rdx
-    jmp    verificarSiLaPosicionEsValidaOca
+    mov    r10,1
+    mov    r11,0
+    jmp    calcularMovimientoOca   
 
 derechaOca:
-    mov    rdx,[posOca]
-    mov    [nuevaPosicion],rdx
-    mov    rdx,[posOca+8]
-    inc    rdx
-    mov    [nuevaPosicion+8],rdx
-    jmp    verificarSiLaPosicionEsValidaOca
+    mov    r10,0
+    mov    r11,1
+    jmp    calcularMovimientoOca  
 
 izquierdaOca:
-    mov    rdx,[posOca]
-    mov    [nuevaPosicion],rdx
-    mov    rdx,[posOca+8]
-    dec    rdx
-    mov    [nuevaPosicion+8],rdx
-    jmp    verificarSiLaPosicionEsValidaOca
+    mov    r10,0
+    mov    r11,-1
+    jmp    calcularMovimientoOca  
 
-
-posicionInvalidaOca:
+printError:
     mPuts txtPosicionInvalida
-    jmp   seleccionarOpcionOca
-
-verificarSiLaPosicionEsValidaOca:
-    cmp     qword[nuevaPosicion],0
-    jl      posicionInvalidaOca
-    cmp     qword[nuevaPosicion],7
-    jge     posicionInvalidaOca
-    cmp     qword[nuevaPosicion+8],0
-    jl      posicionInvalidaOca
-    cmp     qword[nuevaPosicion+8],7
-    jge     posicionInvalidaOca
-    jmp     movimientoValidoOca
+    jmp   moverOca
