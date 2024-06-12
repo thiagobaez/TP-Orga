@@ -21,6 +21,7 @@ printMatriz:
     mov     r15,rdi ;r15 es la direccion de la matriz
     mov     r12,0 ;indice de la r15
     mov     r13,1 ;indice de la columna para salto de linea
+    mPuts   espacios
     sub     rsp,8
     call    ponerNumerosColumnas
     add     rsp,8
@@ -39,6 +40,7 @@ continuar:
     cmp     r12,49
     jne     inicio
     mov     qword[nFila],1
+    mPuts   espacios
     ret
 
 imprimirEspacios:

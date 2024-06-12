@@ -5,11 +5,14 @@ global main
 extern printMatriz
 
 section .data
-    bienvenido db  "Bienvenido!",0
+    bienvenido db  "~~~~~~~~~~ ¡Bienvenido al juego el Zorro y las Ocas! ~~~~~~~~~~",0
     txtSiguientePos db "Ingrese la siguiente posición: ",0
     txtPosicionInvalida db "Posicion inválida.",0
     txtCantidadDeOcasMuertas db "Cantidad de ocas muertas: %d",10,0
+    txtCantidadMovimientosZorro db "Cantidad de movimientos del zorro: %d",10,0
     txtIngresePosOca db "Ingrese la posición de la oca a mover (<fila> <columna>): ",0
+    txtGanoZorro db "--------> ¡JUEGO FINALIZADO! El zorro ha ganado. <--------",0
+    txtGanoOca db "--------> ¡JUEGO FINALIZADO! Las ocas han ganado. <--------",0
     formato db "%d %d",0
     matriz db -1,-1,  "O","O","O",  -1,-1,
            db -1,-1,  "O","O","O",  -1,-1,
@@ -23,10 +26,13 @@ section .data
     posZorro dq 4,3
     turnoZorro db "Turno del zorro:",0
     turnoOca db "Turno de la oca:",0
-    controles db "Arriba: W",10,"Abajo: S",10,
-              db "Izquierda: A",10,"Derecha: D",10,
-              db "Noroeste: Q",10,"Noreste: E",10,
-              db "Suroeste: Z",10,"Sureste: X",0
+    controles db "CONTROLES",10,
+              db "Arriba:    W",10,"Abajo:     S",10,
+              db "Izquierda: A",10,"Derecha:   D",10,
+              db "Noroeste:  Q",10,"Noreste:   E",10,
+              db "Suroeste:  Z",10,"Sureste:   X",10,
+              db "Salir:     P",0
+    salirFlag db 0
 section .bss
     posicionSiguiente resb 2
     nuevaPosicion   resq 2
@@ -36,19 +42,137 @@ section .text
 
 main:
     mPuts   bienvenido
-
-inicio:
-
-
+    mPuts   controles
     mPrintMatriz matriz
+inicio:
+   
+    mPuts   turnoZorro
+    sub     rsp,8
+    call    moverZorro
+    add     rsp,8
+    cmp     byte[salirFlag],1
+    je      retorno
+    mPrintMatriz matriz
+    cmp     byte[cantOcasMuertas],12
+    je      printGanoZorro
+
     mPuts   turnoOca
     sub     rsp,8
     call    moverOca
     add     rsp,8
-    cmp     qword[cantOcasMuertas],12
-     
-    jne     inicio
+    cmp     byte[salirFlag],1
+    je      retorno
+    mPrintMatriz matriz
+    sub     rsp,8
+    call    verificarZorroAcorralado
+    add     rsp,8
+    cmp     bx,1
+    je      printGanoOca
 
+    jmp     inicio
+
+printGanoZorro:
+    mPuts   txtGanoZorro
+    sub     rsp,8
+    call    mostrarEstadisticas
+    add     rsp,8
+    ret
+
+printGanoOca:
+    mPuts   txtGanoOca
+    sub     rsp,8
+    call    mostrarEstadisticas
+    add     rsp,8
+    ret
+
+mostrarEstadisticas:
+    mov     rdi,txtCantidadMovimientosZorro
+    movzx   rsi,byte[cantMovimientosZorro]
+    mPrintf
+
+    mov     rdi,txtCantidadDeOcasMuertas
+    movzx   rsi,byte[cantOcasMuertas]
+    mPrintf
+
+    ret
+
+
+verificarZorroAcorralado:
+    mov     bx,1
+
+    mov     r10,-1
+    mov     r11,0
+    call    calcularCadaCostadoDelZorro
+    cmp     bx,0
+    je      retorno
+
+    mov     r10,1
+    mov     r11,0
+    call    calcularCadaCostadoDelZorro
+    cmp     bx,0
+    je      retorno
+
+    mov     r10,0
+    mov     r11,1
+    call    calcularCadaCostadoDelZorro
+    cmp     bx,0
+    je      retorno
+
+    mov     r10,0
+    mov     r11,-1
+    call    calcularCadaCostadoDelZorro
+    cmp     bx,0
+    je      retorno
+    
+    mov     r10,-1
+    mov     r11,-1
+    call    calcularCadaCostadoDelZorro
+    cmp     bx,0
+    je      retorno
+
+    mov     r10,-1
+    mov     r11,1
+    call    calcularCadaCostadoDelZorro
+    cmp     bx,0
+    je      retorno
+
+    mov     r10,1
+    mov     r11,-1
+    call    calcularCadaCostadoDelZorro
+    cmp     bx,0
+    je      retorno
+
+    mov     r10,1
+    mov     r11,1
+    call    calcularCadaCostadoDelZorro
+    cmp     bx,0
+    je      retorno
+
+    ret
+
+
+calcularCadaCostadoDelZorro:
+    mov     r12,[posZorro]
+    mov     r13,[posZorro+8]
+    add     r12,r10
+    add     r13,r11
+    call    verificarSiLaPosicionEsValida
+    cmp     ax,1
+    jne     retorno
+    mHayEspacioLibre? r12, r13
+    je      elZorroNoEstaAcorralado
+    add     r12,r10
+    add     r13,r11
+    call    verificarSiLaPosicionEsValida
+    cmp     ax,1
+    jne     retorno
+    mHayEspacioLibre? r12, r13
+    je      elZorroNoEstaAcorralado
+retorno:
+    ret
+
+elZorroNoEstaAcorralado:
+    mov     bx,0
     ret
 
 moverZorro:
@@ -72,6 +196,8 @@ moverZorro:
     je     suroeste
     cmp    byte[posicionSiguiente],"X"
     je     sureste
+    cmp    byte[posicionSiguiente],"P"
+    je     salir
     jmp    msgMovimientoInvalidoZorro
 
 movimientoValidoZorro:
@@ -187,11 +313,18 @@ msgMovimientoInvalidoZorro:
     mPuts txtPosicionInvalida
     jmp   moverZorro
 
+salir:
+    inc byte[salirFlag]
+    ret
+
+
 ;-------------------------------- OCA ----------------------------------------- 
 
 moverOca:
     mPuts   txtIngresePosOca
     mGets   stringAux
+    cmp     byte[stringAux],"P"
+    je      salir
     mSscanf2 stringAux,formato,posOca,posOca+8
     cmp     rax,2
     jne     moverOca
@@ -213,6 +346,8 @@ seleccionarOpcionOca:
     je     izquierdaOca
     cmp    byte[posicionSiguiente],"D"
     je     derechaOca
+    cmp    byte[posicionSiguiente],"P"
+    je     salir
     jmp    printError
 
 movimientoValidoOca:
