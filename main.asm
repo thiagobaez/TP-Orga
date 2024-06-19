@@ -8,11 +8,12 @@ section .data
     bienvenido db  "~~~~~~~~~~ ¡Bienvenido al juego el Zorro y las Ocas! ~~~~~~~~~~",0
     txtSiguientePos db "Ingrese la siguiente posición: ",0
     txtPosicionInvalida db "Posicion inválida.",0
-    txtCantidadDeOcasMuertas db "Cantidad de ocas muertas: %d",10,0
-    txtCantidadMovimientosZorro db "Cantidad de movimientos del zorro: %d",10,0
+    txtCantidadDeOcasMuertas db 10,"Cantidad de ocas muertas: %d",10,0
+    txtCantidadMovimientosZorro db "Cantidad de movimientos del zorro:",0
     txtIngresePosOca db "Ingrese la posición de la oca a mover (<fila> <columna>): ",0
     txtGanoZorro db "--------> ¡JUEGO FINALIZADO! El zorro ha ganado. <--------",0
     txtGanoOca db "--------> ¡JUEGO FINALIZADO! Las ocas han ganado. <--------",0
+    txtCadaMovimiento db "%d ",0
     formato db "%d %d",0
     matriz db -1,-1,  "O","O","O",  -1,-1,
            db -1,-1,  "O","O","O",  -1,-1,
@@ -22,22 +23,27 @@ section .data
            db -1,-1,  " "," "," ",  -1,-1,
            db -1,-1,  " "," "," ",  -1,-1
     cantOcasMuertas db 0
-    cantMovimientosZorro db 0
+    cantMovimientosZorro times 8 db 0
     posZorro dq 4,3
-    turnoZorro db "Turno del zorro:",0
-    turnoOca db "Turno de la oca:",0
+    turnoZorro db "~~~~~~ Turno del zorro ~~~~~~",0
+    turnoOca db "~~~~~~ Turno de la oca ~~~~~~",0
     controles db "CONTROLES",10,
               db "Arriba:    W",10,"Abajo:     S",10,
               db "Izquierda: A",10,"Derecha:   D",10,
               db "Noroeste:  Q",10,"Noreste:   E",10,
               db "Suroeste:  Z",10,"Sureste:   X",10,
               db "Salir:     P",0
+    formatoEstadisticas db "%c: %d | ",0
+    letrasEstadisticas db "W","S","D","A","Q","E","Z","X",0
     salirFlag db 0
+
 section .bss
+    zorroAcabaDeComerOca? resb 1  
     posicionSiguiente resb 2
     nuevaPosicion   resq 2
     posOca      resq 2
     stringAux   resb 20
+
 section .text
 
 main:
@@ -45,7 +51,6 @@ main:
     mPuts   controles
     mPrintMatriz matriz
 inicio:
-   
     mPuts   turnoZorro
     sub     rsp,8
     call    moverZorro
@@ -53,6 +58,8 @@ inicio:
     cmp     byte[salirFlag],1
     je      retorno
     mPrintMatriz matriz
+    cmp     byte[zorroAcabaDeComerOca?],1
+    je      inicio 
     cmp     byte[cantOcasMuertas],12
     je      printGanoZorro
 
@@ -86,9 +93,18 @@ printGanoOca:
     ret
 
 mostrarEstadisticas:
-    mov     rdi,txtCantidadMovimientosZorro
-    movzx   rsi,byte[cantMovimientosZorro]
+
+    mPuts   txtCantidadMovimientosZorro
+    mov     r14,0
+loopEstadisticas:
+ 
+    mov     rdi,formatoEstadisticas
+    movzx   rsi,byte[letrasEstadisticas+r14]
+    movzx   rdx,byte[cantMovimientosZorro+r14]
     mPrintf
+    inc     r14
+    cmp     r14,8
+    jne     loopEstadisticas
 
     mov     rdi,txtCantidadDeOcasMuertas
     movzx   rsi,byte[cantOcasMuertas]
@@ -176,7 +192,7 @@ elZorroNoEstaAcorralado:
     ret
 
 moverZorro:
-
+    mov    byte[zorroAcabaDeComerOca?],0
     mPuts  txtSiguientePos
     mGets  posicionSiguiente
     
@@ -217,7 +233,7 @@ movimientoValidoZorro:
     mov     rdx,[nuevaPosicion+8]
     mov     [posZorro+8],rdx
 
-    inc    byte[cantMovimientosZorro]
+    inc    byte[r15]
 
     ret
 
@@ -247,45 +263,55 @@ calcularMovimientoZorro:
     mov    [nuevaPosicion],r12
     mov    [nuevaPosicion+8],r13
     inc    byte[cantOcasMuertas]
+    inc    byte[zorroAcabaDeComerOca?]
     jmp    movimientoValidoZorro
 
 arriba:
     mov    r10,-1
     mov    r11,0
+    mov    r15,cantMovimientosZorro
     jmp    calcularMovimientoZorro
  
 abajo:
     mov    r10,1
     mov    r11,0
+    mov    r15,cantMovimientosZorro+1
     jmp    calcularMovimientoZorro
 
 derecha:
     mov    r10,0
     mov    r11,1
+    mov    r15,cantMovimientosZorro+2
     jmp    calcularMovimientoZorro
 
 izquierda:
     mov    r10,0
     mov    r11,-1
+    mov    r15,cantMovimientosZorro+3
     jmp    calcularMovimientoZorro
     
 noroeste:
     mov    r10,-1
     mov    r11,-1
+    mov    r15,cantMovimientosZorro+4
     jmp    calcularMovimientoZorro
+
 noreste:
     mov    r10,-1
     mov    r11,1
+    mov    r15,cantMovimientosZorro+5
     jmp    calcularMovimientoZorro
 
 suroeste:
     mov    r10,1
     mov    r11,-1
+    mov    r15,cantMovimientosZorro+6
     jmp    calcularMovimientoZorro
 
 sureste:
     mov    r10,1
     mov    r11,1
+    mov    r15,cantMovimientosZorro+7
     jmp    calcularMovimientoZorro
  
 posicionInvalida:
