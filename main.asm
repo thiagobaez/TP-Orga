@@ -57,11 +57,11 @@ inicio:
     add     rsp,8
     cmp     byte[salirFlag],1
     je      retorno
-    mPrintMatriz matriz
-    cmp     byte[zorroAcabaDeComerOca?],1
-    je      inicio 
+    mPrintMatriz matriz 
     cmp     byte[cantOcasMuertas],12
     je      printGanoZorro
+    cmp     byte[zorroAcabaDeComerOca?],1
+    je      inicio
 
     mPuts   turnoOca
     sub     rsp,8
