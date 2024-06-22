@@ -1,0 +1,686 @@
+     1                                  %include "macros.asm"
+     1                              <1> %macro mPrintf 0
+     2                              <1>     sub     rsp,8
+     3                              <1>     call    printf
+     4                              <1>     add     rsp,8
+     5                              <1> %endmacro
+     6                              <1> 
+     7                              <1> %macro mPuts 1
+     8                              <1>     mov     rdi,%1
+     9                              <1>     sub     rsp,8
+    10                              <1>     call    puts
+    11                              <1>     add     rsp,8
+    12                              <1> %endmacro
+    13                              <1> 
+    14                              <1> %macro mGets 1
+    15                              <1>     mov     rdi,%1
+    16                              <1>     sub     rsp,8
+    17                              <1>     call    gets
+    18                              <1>     add     rsp,8
+    19                              <1> %endmacro
+    20                              <1> 
+    21                              <1> %macro mSscanf 3
+    22                              <1>     mov     rdi,%1
+    23                              <1>     mov     rsi,%2
+    24                              <1>     mov     rdx,%3
+    25                              <1>     sub     rsp,8
+    26                              <1>     call    sscanf
+    27                              <1>     add     rsp,8
+    28                              <1> %endmacro
+    29                              <1> 
+    30                              <1> %macro mSscanf2 4
+    31                              <1>     mov     rdi,%1
+    32                              <1>     mov     rsi,%2
+    33                              <1>     mov     rdx,%3
+    34                              <1>     mov     rcx,%4
+    35                              <1>     sub     rsp,8
+    36                              <1>     call    sscanf
+    37                              <1>     add     rsp,8
+    38                              <1> %endmacro
+    39                              <1> 
+    40                              <1> %macro mImprimirNumeroFila 0
+    41                              <1>     sub     rsp,8
+    42                              <1>     call    imprimirNumeroFila
+    43                              <1>     add     rsp,8
+    44                              <1> %endmacro
+    45                              <1> 
+    46                              <1> %macro mPrintMatriz 1
+    47                              <1>     mov     rdi,%1
+    48                              <1>     sub     rsp,8
+    49                              <1>     call    printMatriz
+    50                              <1>     add     rsp,8
+    51                              <1> %endmacro
+    52                              <1> 
+    53                              <1> %macro mHayEspacioLibre? 2
+    54                              <1>     mov    rdx,%1
+    55                              <1>     imul   rdx,7
+    56                              <1>     mov    rax,%2
+    57                              <1>     cmp    byte[matriz+rdx+rax]," "
+    58                              <1> %endmacro
+    59                              <1> 
+    60                              <1> extern  printf
+    61                              <1> extern  puts
+    62                              <1> extern  gets
+    63                              <1> extern  sscanf
+    64                              <1> extern printMatriz
+     2                                  
+     3                                  global main
+     4                                  
+     5                                  extern printMatriz
+     6                                  
+     7                                  section .data
+     8 00000000 7E7E7E7E7E7E7E7E7E-         bienvenido db  "~~~~~~~~~~ ¡Bienvenido al juego el Zorro y las Ocas! ~~~~~~~~~~",0
+     8 00000009 7E20C2A14269656E76-
+     8 00000012 656E69646F20616C20-
+     8 0000001B 6A7565676F20656C20-
+     8 00000024 5A6F72726F2079206C-
+     8 0000002D 6173204F6361732120-
+     8 00000036 7E7E7E7E7E7E7E7E7E-
+     8 0000003F 7E00               
+     9 00000041 496E6772657365206C-         txtSiguientePos db "Ingrese la siguiente posición: ",0
+     9 0000004A 61207369677569656E-
+     9 00000053 746520706F73696369-
+     9 0000005C C3B36E3A2000       
+    10 00000062 506F736963696F6E20-         txtPosicionInvalida db "Posicion inválida.",0
+    10 0000006B 696E76C3A16C696461-
+    10 00000074 2E00               
+    11 00000076 0A43616E7469646164-         txtCantidadDeOcasMuertas db 10,"Cantidad de ocas muertas: %d",10,0
+    11 0000007F 206465206F63617320-
+    11 00000088 6D7565727461733A20-
+    11 00000091 25640A00           
+    12 00000095 43616E746964616420-         txtCantidadMovimientosZorro db "Cantidad de movimientos del zorro:",0
+    12 0000009E 6465206D6F76696D69-
+    12 000000A7 656E746F732064656C-
+    12 000000B0 207A6F72726F3A00   
+    13 000000B8 496E6772657365206C-         txtIngresePosOca db "Ingrese la posición de la oca a mover (<fila> <columna>): ",0
+    13 000000C1 6120706F73696369C3-
+    13 000000CA B36E206465206C6120-
+    13 000000D3 6F63612061206D6F76-
+    13 000000DC 657220283C66696C61-
+    13 000000E5 3E203C636F6C756D6E-
+    13 000000EE 613E293A2000       
+    14 000000F4 2D2D2D2D2D2D2D2D3E-         txtGanoZorro db "--------> ¡JUEGO FINALIZADO! El zorro ha ganado. <--------",0
+    14 000000FD 20C2A14A5545474F20-
+    14 00000106 46494E414C495A4144-
+    14 0000010F 4F2120456C207A6F72-
+    14 00000118 726F2068612067616E-
+    14 00000121 61646F2E203C2D2D2D-
+    14 0000012A 2D2D2D2D2D00       
+    15 00000130 2D2D2D2D2D2D2D2D3E-         txtGanoOca db "--------> ¡JUEGO FINALIZADO! Las ocas han ganado. <--------",0
+    15 00000139 20C2A14A5545474F20-
+    15 00000142 46494E414C495A4144-
+    15 0000014B 4F21204C6173206F63-
+    15 00000154 61732068616E206761-
+    15 0000015D 6E61646F2E203C2D2D-
+    15 00000166 2D2D2D2D2D2D00     
+    16 0000016D 25642000                    txtCadaMovimiento db "%d ",0
+    17 00000171 256420256400                formato db "%d %d",0
+    18 00000177 FFFF4F4F4FFFFF              matriz db -1,-1,  "O","O","O",  -1,-1,
+    19 0000017E FFFF4F4F4FFFFF                     db -1,-1,  "O","O","O",  -1,-1,
+    20 00000185 4F4F4F4F4F4F4F                     db "O","O","O","O","O","O","O",
+    21 0000018C 4F20202020204F                     db "O"," "," "," "," "," ","O",
+    22 00000193 4F20205820204F                     db "O"," "," ","X"," "," ","O",
+    23 0000019A FFFF202020FFFF                     db -1,-1,  " "," "," ",  -1,-1,
+    24 000001A1 FFFF202020FFFF                     db -1,-1,  " "," "," ",  -1,-1
+    25 000001A8 00                          cantOcasMuertas db 0
+    26 000001A9 00<rep 8h>                  cantMovimientosZorro times 8 db 0
+    27 000001B1 040000000000000003-         posZorro dq 4,3
+    27 000001BA 00000000000000     
+    28 000001C1 7E7E7E7E7E7E205475-         turnoZorro db "~~~~~~ Turno del zorro ~~~~~~",0
+    28 000001CA 726E6F2064656C207A-
+    28 000001D3 6F72726F207E7E7E7E-
+    28 000001DC 7E7E00             
+    29 000001DF 7E7E7E7E7E7E205475-         turnoOca db "~~~~~~ Turno de la oca ~~~~~~",0
+    29 000001E8 726E6F206465206C61-
+    29 000001F1 206F6361207E7E7E7E-
+    29 000001FA 7E7E00             
+    30 000001FD 434F4E54524F4C4553-         controles db "CONTROLES",10,
+    30 00000206 0A                 
+    31 00000207 4172726962613A2020-                   db "Arriba:    W",10,"Abajo:     S",10,
+    31 00000210 2020570A4162616A6F-
+    31 00000219 3A2020202020530A   
+    32 00000221 497A71756965726461-                   db "Izquierda: A",10,"Derecha:   D",10,
+    32 0000022A 3A20410A4465726563-
+    32 00000233 68613A202020440A   
+    33 0000023B 4E6F726F657374653A-                   db "Noroeste:  Q",10,"Noreste:   E",10,
+    33 00000244 2020510A4E6F726573-
+    33 0000024D 74653A202020450A   
+    34 00000255 5375726F657374653A-                   db "Suroeste:  Z",10,"Sureste:   X",10,
+    34 0000025E 20205A0A5375726573-
+    34 00000267 74653A202020580A   
+    35 0000026F 53616C69723A202020-                   db "Salir:     P",0
+    35 00000278 20205000           
+    36 0000027C 25633A202564207C20-         formatoEstadisticas db "%c: %d | ",0
+    36 00000285 00                 
+    37 00000286 5753444151455A5800          letrasEstadisticas db "W","S","D","A","Q","E","Z","X",0
+    38 0000028F 00                          salirFlag db 0
+    39                                  
+    40                                  section .bss
+    41 00000000 ??                          zorroAcabaDeComerOca? resb 1  
+    42 00000001 ????                        posicionSiguiente resb 2
+    43 00000003 <res 10h>                   nuevaPosicion   resq 2
+    44 00000013 <res 10h>                   posOca      resq 2
+    45 00000023 <res 14h>                   stringAux   resb 20
+    46                                  
+    47                                  section .text
+    48                                  
+    49                                  main:
+    50                                      mPuts   bienvenido
+     8 00000000 48BF-               <1>  mov rdi,%1
+     8 00000002 [0000000000000000]  <1>
+     9 0000000A 4883EC08            <1>  sub rsp,8
+    10 0000000E E8(00000000)        <1>  call puts
+    11 00000013 4883C408            <1>  add rsp,8
+    51                                      mPuts   controles
+     8 00000017 48BF-               <1>  mov rdi,%1
+     8 00000019 [FD01000000000000]  <1>
+     9 00000021 4883EC08            <1>  sub rsp,8
+    10 00000025 E8(00000000)        <1>  call puts
+    11 0000002A 4883C408            <1>  add rsp,8
+    52                                      mPrintMatriz matriz
+    47 0000002E 48BF-               <1>  mov rdi,%1
+    47 00000030 [7701000000000000]  <1>
+    48 00000038 4883EC08            <1>  sub rsp,8
+    49 0000003C E8(00000000)        <1>  call printMatriz
+    50 00000041 4883C408            <1>  add rsp,8
+    53                                  inicio:
+    54                                      mPuts   turnoZorro
+     8 00000045 48BF-               <1>  mov rdi,%1
+     8 00000047 [C101000000000000]  <1>
+     9 0000004F 4883EC08            <1>  sub rsp,8
+    10 00000053 E8(00000000)        <1>  call puts
+    11 00000058 4883C408            <1>  add rsp,8
+    55 0000005C 4883EC08                    sub     rsp,8
+    56 00000060 E891020000                  call    moverZorro
+    57 00000065 4883C408                    add     rsp,8
+    58 00000069 803C25[8F020000]01          cmp     byte[salirFlag],1
+    59 00000071 0F8479020000                je      retorno
+    60                                      mPrintMatriz matriz
+    47 00000077 48BF-               <1>  mov rdi,%1
+    47 00000079 [7701000000000000]  <1>
+    48 00000081 4883EC08            <1>  sub rsp,8
+    49 00000085 E8(00000000)        <1>  call printMatriz
+    50 0000008A 4883C408            <1>  add rsp,8
+    61 0000008E 803C25[00000000]01          cmp     byte[zorroAcabaDeComerOca?],1
+    62 00000096 74AD                        je      inicio 
+    63 00000098 803C25[A8010000]0C          cmp     byte[cantOcasMuertas],12
+    64 000000A0 7461                        je      printGanoZorro
+    65                                  
+    66                                      mPuts   turnoOca
+     8 000000A2 48BF-               <1>  mov rdi,%1
+     8 000000A4 [DF01000000000000]  <1>
+     9 000000AC 4883EC08            <1>  sub rsp,8
+    10 000000B0 E8(00000000)        <1>  call puts
+    11 000000B5 4883C408            <1>  add rsp,8
+    67 000000B9 4883EC08                    sub     rsp,8
+    68 000000BD E835050000                  call    moverOca
+    69 000000C2 4883C408                    add     rsp,8
+    70 000000C6 803C25[8F020000]01          cmp     byte[salirFlag],1
+    71 000000CE 0F841C020000                je      retorno
+    72                                      mPrintMatriz matriz
+    47 000000D4 48BF-               <1>  mov rdi,%1
+    47 000000D6 [7701000000000000]  <1>
+    48 000000DE 4883EC08            <1>  sub rsp,8
+    49 000000E2 E8(00000000)        <1>  call printMatriz
+    50 000000E7 4883C408            <1>  add rsp,8
+    73 000000EB 4883EC08                    sub     rsp,8
+    74 000000EF E8C7000000                  call    verificarZorroAcorralado
+    75 000000F4 4883C408                    add     rsp,8
+    76 000000F8 6683FB01                    cmp     bx,1
+    77 000000FC 742A                        je      printGanoOca
+    78                                  
+    79 000000FE E942FFFFFF                  jmp     inicio
+    80                                  
+    81                                  printGanoZorro:
+    82                                      mPuts   txtGanoZorro
+     8 00000103 48BF-               <1>  mov rdi,%1
+     8 00000105 [F400000000000000]  <1>
+     9 0000010D 4883EC08            <1>  sub rsp,8
+    10 00000111 E8(00000000)        <1>  call puts
+    11 00000116 4883C408            <1>  add rsp,8
+    83 0000011A 4883EC08                    sub     rsp,8
+    84 0000011E E82A000000                  call    mostrarEstadisticas
+    85 00000123 4883C408                    add     rsp,8
+    86 00000127 C3                          ret
+    87                                  
+    88                                  printGanoOca:
+    89                                      mPuts   txtGanoOca
+     8 00000128 48BF-               <1>  mov rdi,%1
+     8 0000012A [3001000000000000]  <1>
+     9 00000132 4883EC08            <1>  sub rsp,8
+    10 00000136 E8(00000000)        <1>  call puts
+    11 0000013B 4883C408            <1>  add rsp,8
+    90 0000013F 4883EC08                    sub     rsp,8
+    91 00000143 E805000000                  call    mostrarEstadisticas
+    92 00000148 4883C408                    add     rsp,8
+    93 0000014C C3                          ret
+    94                                  
+    95                                  mostrarEstadisticas:
+    96                                  
+    97                                      mPuts   txtCantidadMovimientosZorro
+     8 0000014D 48BF-               <1>  mov rdi,%1
+     8 0000014F [9500000000000000]  <1>
+     9 00000157 4883EC08            <1>  sub rsp,8
+    10 0000015B E8(00000000)        <1>  call puts
+    11 00000160 4883C408            <1>  add rsp,8
+    98 00000164 41BE00000000                mov     r14,0
+    99                                  loopEstadisticas:
+   100                                   
+   101 0000016A 48BF-                       mov     rdi,formatoEstadisticas
+   101 0000016C [7C02000000000000] 
+   102 00000174 490FB6B6[86020000]          movzx   rsi,byte[letrasEstadisticas+r14]
+   103 0000017C 490FB696[A9010000]          movzx   rdx,byte[cantMovimientosZorro+r14]
+   104                                      mPrintf
+     2 00000184 4883EC08            <1>  sub rsp,8
+     3 00000188 E8(00000000)        <1>  call printf
+     4 0000018D 4883C408            <1>  add rsp,8
+   105 00000191 49FFC6                      inc     r14
+   106 00000194 4983FE08                    cmp     r14,8
+   107 00000198 75D0                        jne     loopEstadisticas
+   108                                  
+   109 0000019A 48BF-                       mov     rdi,txtCantidadDeOcasMuertas
+   109 0000019C [7600000000000000] 
+   110 000001A4 480FB63425-                 movzx   rsi,byte[cantOcasMuertas]
+   110 000001A9 [A8010000]         
+   111                                      mPrintf
+     2 000001AD 4883EC08            <1>  sub rsp,8
+     3 000001B1 E8(00000000)        <1>  call printf
+     4 000001B6 4883C408            <1>  add rsp,8
+   112                                  
+   113 000001BA C3                          ret
+   114                                  
+   115                                  
+   116                                  verificarZorroAcorralado:
+   117 000001BB 66BB0100                    mov     bx,1
+   118                                  
+   119 000001BF 49C7C2FFFFFFFF              mov     r10,-1
+   120 000001C6 41BB00000000                mov     r11,0
+   121 000001CC E8C5000000                  call    calcularCadaCostadoDelZorro
+   122 000001D1 6683FB00                    cmp     bx,0
+   123 000001D5 0F8415010000                je      retorno
+   124                                  
+   125 000001DB 41BA01000000                mov     r10,1
+   126 000001E1 41BB00000000                mov     r11,0
+   127 000001E7 E8AA000000                  call    calcularCadaCostadoDelZorro
+   128 000001EC 6683FB00                    cmp     bx,0
+   129 000001F0 0F84FA000000                je      retorno
+   130                                  
+   131 000001F6 41BA00000000                mov     r10,0
+   132 000001FC 41BB01000000                mov     r11,1
+   133 00000202 E88F000000                  call    calcularCadaCostadoDelZorro
+   134 00000207 6683FB00                    cmp     bx,0
+   135 0000020B 0F84DF000000                je      retorno
+   136                                  
+   137 00000211 41BA00000000                mov     r10,0
+   138 00000217 49C7C3FFFFFFFF              mov     r11,-1
+   139 0000021E E873000000                  call    calcularCadaCostadoDelZorro
+   140 00000223 6683FB00                    cmp     bx,0
+   141 00000227 0F84C3000000                je      retorno
+   142                                      
+   143 0000022D 49C7C2FFFFFFFF              mov     r10,-1
+   144 00000234 49C7C3FFFFFFFF              mov     r11,-1
+   145 0000023B E856000000                  call    calcularCadaCostadoDelZorro
+   146 00000240 6683FB00                    cmp     bx,0
+   147 00000244 0F84A6000000                je      retorno
+   148                                  
+   149 0000024A 49C7C2FFFFFFFF              mov     r10,-1
+   150 00000251 41BB01000000                mov     r11,1
+   151 00000257 E83A000000                  call    calcularCadaCostadoDelZorro
+   152 0000025C 6683FB00                    cmp     bx,0
+   153 00000260 0F848A000000                je      retorno
+   154                                  
+   155 00000266 41BA01000000                mov     r10,1
+   156 0000026C 49C7C3FFFFFFFF              mov     r11,-1
+   157 00000273 E81E000000                  call    calcularCadaCostadoDelZorro
+   158 00000278 6683FB00                    cmp     bx,0
+   159 0000027C 7472                        je      retorno
+   160                                  
+   161 0000027E 41BA01000000                mov     r10,1
+   162 00000284 41BB01000000                mov     r11,1
+   163 0000028A E807000000                  call    calcularCadaCostadoDelZorro
+   164 0000028F 6683FB00                    cmp     bx,0
+   165 00000293 745B                        je      retorno
+   166                                  
+   167 00000295 C3                          ret
+   168                                  
+   169                                  
+   170                                  calcularCadaCostadoDelZorro:
+   171 00000296 4C8B2425[B1010000]          mov     r12,[posZorro]
+   172 0000029E 4C8B2C25[B9010000]          mov     r13,[posZorro+8]
+   173 000002A6 4D01D4                      add     r12,r10
+   174 000002A9 4D01DD                      add     r13,r11
+   175 000002AC E8F6020000                  call    verificarSiLaPosicionEsValida
+   176 000002B1 6683F801                    cmp     ax,1
+   177 000002B5 7539                        jne     retorno
+   178                                      mHayEspacioLibre? r12, r13
+    54 000002B7 4C89E2              <1>  mov rdx,%1
+    55 000002BA 486BD207            <1>  imul rdx,7
+    56 000002BE 4C89E8              <1>  mov rax,%2
+    57 000002C1 80BC02[77010000]20  <1>  cmp byte[matriz+rdx+rax]," "
+   179 000002C9 7426                        je      elZorroNoEstaAcorralado
+   180 000002CB 4D01D4                      add     r12,r10
+   181 000002CE 4D01DD                      add     r13,r11
+   182 000002D1 E8D1020000                  call    verificarSiLaPosicionEsValida
+   183 000002D6 6683F801                    cmp     ax,1
+   184 000002DA 7514                        jne     retorno
+   185                                      mHayEspacioLibre? r12, r13
+    54 000002DC 4C89E2              <1>  mov rdx,%1
+    55 000002DF 486BD207            <1>  imul rdx,7
+    56 000002E3 4C89E8              <1>  mov rax,%2
+    57 000002E6 80BC02[77010000]20  <1>  cmp byte[matriz+rdx+rax]," "
+   186 000002EE 7401                        je      elZorroNoEstaAcorralado
+   187                                  retorno:
+   188 000002F0 C3                          ret
+   189                                  
+   190                                  elZorroNoEstaAcorralado:
+   191 000002F1 66BB0000                    mov     bx,0
+   192 000002F5 C3                          ret
+   193                                  
+   194                                  moverZorro:
+   195 000002F6 C60425[00000000]00          mov    byte[zorroAcabaDeComerOca?],0
+   196                                      mPuts  txtSiguientePos
+     8 000002FE 48BF-               <1>  mov rdi,%1
+     8 00000300 [4100000000000000]  <1>
+     9 00000308 4883EC08            <1>  sub rsp,8
+    10 0000030C E8(00000000)        <1>  call puts
+    11 00000311 4883C408            <1>  add rsp,8
+   197                                      mGets  posicionSiguiente
+    15 00000315 48BF-               <1>  mov rdi,%1
+    15 00000317 [0100000000000000]  <1>
+    16 0000031F 4883EC08            <1>  sub rsp,8
+    17 00000323 E8(00000000)        <1>  call gets
+    18 00000328 4883C408            <1>  add rsp,8
+   198                                      
+   199 0000032C 803C25[01000000]57          cmp    byte[posicionSiguiente],"W"
+   200 00000334 0F848A010000                je     arriba
+   201 0000033A 803C25[01000000]53          cmp    byte[posicionSiguiente],"S"
+   202 00000342 0F8498010000                je     abajo
+   203 00000348 803C25[01000000]41          cmp    byte[posicionSiguiente],"A"
+   204 00000350 0F84C0010000                je     izquierda
+   205 00000356 803C25[01000000]44          cmp    byte[posicionSiguiente],"D"
+   206 0000035E 0F8497010000                je     derecha
+   207 00000364 803C25[01000000]51          cmp    byte[posicionSiguiente],"Q"
+   208 0000036C 0F84C0010000                je     noroeste
+   209 00000372 803C25[01000000]45          cmp    byte[posicionSiguiente],"E"
+   210 0000037A 0F84CF010000                je     noreste
+   211 00000380 803C25[01000000]5A          cmp    byte[posicionSiguiente],"Z"
+   212 00000388 0F84DD010000                je     suroeste
+   213 0000038E 803C25[01000000]58          cmp    byte[posicionSiguiente],"X"
+   214 00000396 0F84EB010000                je     sureste
+   215 0000039C 803C25[01000000]50          cmp    byte[posicionSiguiente],"P"
+   216 000003A4 0F8445020000                je     salir
+   217 000003AA E924020000                  jmp    msgMovimientoInvalidoZorro
+   218                                  
+   219                                  movimientoValidoZorro:
+   220                                  
+   221 000003AF 488B1425[03000000]          mov     rdx,[nuevaPosicion]
+   222 000003B7 486BD207                    imul    rdx,7
+   223 000003BB 488B0425[0B000000]          mov     rax,[nuevaPosicion+8]
+   224 000003C3 C68402[77010000]58          mov     byte[matriz+rdx+rax],"X"
+   225                                  
+   226 000003CB 488B1425[B1010000]          mov     rdx,[posZorro]
+   227 000003D3 486BD207                    imul    rdx,7
+   228 000003D7 488B0425[B9010000]          mov     rax,[posZorro+8]
+   229 000003DF C68402[77010000]20          mov     byte[matriz+rdx+rax]," "
+   230                                  
+   231 000003E7 488B1425[03000000]          mov     rdx,[nuevaPosicion]
+   232 000003EF 48891425[B1010000]          mov     [posZorro],rdx
+   233 000003F7 488B1425[0B000000]          mov     rdx,[nuevaPosicion+8]
+   234 000003FF 48891425[B9010000]          mov     [posZorro+8],rdx
+   235                                  
+   236 00000407 41FE07                      inc    byte[r15]
+   237                                  
+   238 0000040A C3                          ret
+   239                                  
+   240                                  calcularMovimientoZorro:
+   241 0000040B 4C8B2425[B1010000]          mov    r12,[posZorro]
+   242 00000413 4C8B2C25[B9010000]          mov    r13,[posZorro+8]
+   243 0000041B 4D01D4                      add    r12,r10
+   244 0000041E 4D01DD                      add    r13,r11
+   245 00000421 E881010000                  call   verificarSiLaPosicionEsValida
+   246 00000426 6683F801                    cmp    ax,1
+   247 0000042A 0F85A3010000                jne    msgMovimientoInvalidoZorro
+   248 00000430 4C892425[03000000]          mov    [nuevaPosicion],r12
+   249 00000438 4C892C25[0B000000]          mov    [nuevaPosicion+8],r13
+   250                                      mHayEspacioLibre? r12, r13;me fijo si hay un espacio libre, si no lo hay, es porque estoy tratando de saltar una oca
+    54 00000440 4C89E2              <1>  mov rdx,%1
+    55 00000443 486BD207            <1>  imul rdx,7
+    56 00000447 4C89E8              <1>  mov rax,%2
+    57 0000044A 80BC02[77010000]20  <1>  cmp byte[matriz+rdx+rax]," "
+   251 00000452 0F8457FFFFFF                je     movimientoValidoZorro;y si no, me fijo si puedo saltar sobre una oca
+   252 00000458 4D01D4                      add    r12,r10
+   253 0000045B 4D01DD                      add    r13,r11
+   254 0000045E E844010000                  call   verificarSiLaPosicionEsValida
+   255 00000463 6683F801                    cmp    ax,1
+   256 00000467 0F8566010000                jne    msgMovimientoInvalidoZorro
+   257                                      mHayEspacioLibre? r12, r13;si hay una oca, no puedo saltar
+    54 0000046D 4C89E2              <1>  mov rdx,%1
+    55 00000470 486BD207            <1>  imul rdx,7
+    56 00000474 4C89E8              <1>  mov rax,%2
+    57 00000477 80BC02[77010000]20  <1>  cmp byte[matriz+rdx+rax]," "
+   258 0000047F 0F854E010000                jne    msgMovimientoInvalidoZorro
+   259 00000485 488B1425[03000000]          mov    rdx,[nuevaPosicion]
+   260 0000048D 486BD207                    imul   rdx,7
+   261 00000491 488B0425[0B000000]          mov    rax,[nuevaPosicion+8]
+   262 00000499 C68402[77010000]20          mov    byte[matriz+rdx+rax]," "
+   263 000004A1 4C892425[03000000]          mov    [nuevaPosicion],r12
+   264 000004A9 4C892C25[0B000000]          mov    [nuevaPosicion+8],r13
+   265 000004B1 FE0425[A8010000]            inc    byte[cantOcasMuertas]
+   266 000004B8 FE0425[00000000]            inc    byte[zorroAcabaDeComerOca?]
+   267 000004BF E9EBFEFFFF                  jmp    movimientoValidoZorro
+   268                                  
+   269                                  arriba:
+   270 000004C4 49C7C2FFFFFFFF              mov    r10,-1
+   271 000004CB 41BB00000000                mov    r11,0
+   272 000004D1 49BF-                       mov    r15,cantMovimientosZorro
+   272 000004D3 [A901000000000000] 
+   273 000004DB E92BFFFFFF                  jmp    calcularMovimientoZorro
+   274                                   
+   275                                  abajo:
+   276 000004E0 41BA01000000                mov    r10,1
+   277 000004E6 41BB00000000                mov    r11,0
+   278 000004EC 49BF-                       mov    r15,cantMovimientosZorro+1
+   278 000004EE [AA01000000000000] 
+   279 000004F6 E910FFFFFF                  jmp    calcularMovimientoZorro
+   280                                  
+   281                                  derecha:
+   282 000004FB 41BA00000000                mov    r10,0
+   283 00000501 41BB01000000                mov    r11,1
+   284 00000507 49BF-                       mov    r15,cantMovimientosZorro+2
+   284 00000509 [AB01000000000000] 
+   285 00000511 E9F5FEFFFF                  jmp    calcularMovimientoZorro
+   286                                  
+   287                                  izquierda:
+   288 00000516 41BA00000000                mov    r10,0
+   289 0000051C 49C7C3FFFFFFFF              mov    r11,-1
+   290 00000523 49BF-                       mov    r15,cantMovimientosZorro+3
+   290 00000525 [AC01000000000000] 
+   291 0000052D E9D9FEFFFF                  jmp    calcularMovimientoZorro
+   292                                      
+   293                                  noroeste:
+   294 00000532 49C7C2FFFFFFFF              mov    r10,-1
+   295 00000539 49C7C3FFFFFFFF              mov    r11,-1
+   296 00000540 49BF-                       mov    r15,cantMovimientosZorro+4
+   296 00000542 [AD01000000000000] 
+   297 0000054A E9BCFEFFFF                  jmp    calcularMovimientoZorro
+   298                                  
+   299                                  noreste:
+   300 0000054F 49C7C2FFFFFFFF              mov    r10,-1
+   301 00000556 41BB01000000                mov    r11,1
+   302 0000055C 49BF-                       mov    r15,cantMovimientosZorro+5
+   302 0000055E [AE01000000000000] 
+   303 00000566 E9A0FEFFFF                  jmp    calcularMovimientoZorro
+   304                                  
+   305                                  suroeste:
+   306 0000056B 41BA01000000                mov    r10,1
+   307 00000571 49C7C3FFFFFFFF              mov    r11,-1
+   308 00000578 49BF-                       mov    r15,cantMovimientosZorro+6
+   308 0000057A [AF01000000000000] 
+   309 00000582 E984FEFFFF                  jmp    calcularMovimientoZorro
+   310                                  
+   311                                  sureste:
+   312 00000587 41BA01000000                mov    r10,1
+   313 0000058D 41BB01000000                mov    r11,1
+   314 00000593 49BF-                       mov    r15,cantMovimientosZorro+7
+   314 00000595 [B001000000000000] 
+   315 0000059D E969FEFFFF                  jmp    calcularMovimientoZorro
+   316                                   
+   317                                  posicionInvalida:
+   318 000005A2 66B80000                    mov     ax,0;se devuelve 0 en ax si es inválida
+   319 000005A6 C3                          ret
+   320                                  
+   321                                  verificarSiLaPosicionEsValida:
+   322                                  
+   323 000005A7 4983FC00                    cmp     r12,0
+   324 000005AB 7CF5                        jl      posicionInvalida
+   325 000005AD 4983FC07                    cmp     r12,7
+   326 000005B1 7DEF                        jge     posicionInvalida
+   327 000005B3 4983FD00                    cmp     r13,0
+   328 000005B7 7CE9                        jl      posicionInvalida
+   329 000005B9 4983FD07                    cmp     r13,7
+   330 000005BD 7DE3                        jge     posicionInvalida
+   331 000005BF 4D6BF407                    imul    r14,r12,7
+   332 000005C3 4380BC2E[77010000]-         cmp     byte[matriz+r14+r13],-1
+   332 000005CB FF                 
+   333 000005CC 74D4                        je      posicionInvalida    
+   334                                  
+   335 000005CE 66B80100                    mov     ax,1;se devuelve 1 si la posición es válida
+   336 000005D2 C3                          ret
+   337                                  
+   338                                  msgMovimientoInvalidoZorro:
+   339                                      mPuts txtPosicionInvalida
+     8 000005D3 48BF-               <1>  mov rdi,%1
+     8 000005D5 [6200000000000000]  <1>
+     9 000005DD 4883EC08            <1>  sub rsp,8
+    10 000005E1 E8(00000000)        <1>  call puts
+    11 000005E6 4883C408            <1>  add rsp,8
+   340 000005EA E907FDFFFF                  jmp   moverZorro
+   341                                  
+   342                                  salir:
+   343 000005EF FE0425[8F020000]            inc byte[salirFlag]
+   344 000005F6 C3                          ret
+   345                                  
+   346                                  
+   347                                  ;-------------------------------- OCA ----------------------------------------- 
+   348                                  
+   349                                  moverOca:
+   350                                      mPuts   txtIngresePosOca
+     8 000005F7 48BF-               <1>  mov rdi,%1
+     8 000005F9 [B800000000000000]  <1>
+     9 00000601 4883EC08            <1>  sub rsp,8
+    10 00000605 E8(00000000)        <1>  call puts
+    11 0000060A 4883C408            <1>  add rsp,8
+   351                                      mGets   stringAux
+    15 0000060E 48BF-               <1>  mov rdi,%1
+    15 00000610 [2300000000000000]  <1>
+    16 00000618 4883EC08            <1>  sub rsp,8
+    17 0000061C E8(00000000)        <1>  call gets
+    18 00000621 4883C408            <1>  add rsp,8
+   352 00000625 803C25[23000000]50          cmp     byte[stringAux],"P"
+   353 0000062D 74C0                        je      salir
+   354                                      mSscanf2 stringAux,formato,posOca,posOca+8
+    31 0000062F 48BF-               <1>  mov rdi,%1
+    31 00000631 [2300000000000000]  <1>
+    32 00000639 48BE-               <1>  mov rsi,%2
+    32 0000063B [7101000000000000]  <1>
+    33 00000643 48BA-               <1>  mov rdx,%3
+    33 00000645 [1300000000000000]  <1>
+    34 0000064D 48B9-               <1>  mov rcx,%4
+    34 0000064F [1B00000000000000]  <1>
+    35 00000657 4883EC08            <1>  sub rsp,8
+    36 0000065B E8(00000000)        <1>  call sscanf
+    37 00000660 4883C408            <1>  add rsp,8
+   355 00000664 4883F802                    cmp     rax,2
+   356 00000668 758D                        jne     moverOca
+   357 0000066A 48FF0C25[13000000]          dec     qword[posOca]
+   358 00000672 48FF0C25[1B000000]          dec     qword[posOca+8]
+   359                                  
+   360 0000067A 488B1425[13000000]          mov     rdx,[posOca]
+   361 00000682 486BD207                    imul    rdx,7
+   362 00000686 488B0425[1B000000]          mov     rax,[posOca+8]
+   363 0000068E 80BC02[77010000]4F          cmp     byte[matriz+rdx+rax],"O"
+   364 00000696 0F853A010000                jne     printError ;Comparo el valor de la matriz en la posición ingresada y verifico si hay una oca
+   365                                      
+   366                                  seleccionarOpcionOca:
+   367                                      mPuts  txtSiguientePos
+     8 0000069C 48BF-               <1>  mov rdi,%1
+     8 0000069E [4100000000000000]  <1>
+     9 000006A6 4883EC08            <1>  sub rsp,8
+    10 000006AA E8(00000000)        <1>  call puts
+    11 000006AF 4883C408            <1>  add rsp,8
+   368                                      mGets  posicionSiguiente
+    15 000006B3 48BF-               <1>  mov rdi,%1
+    15 000006B5 [0100000000000000]  <1>
+    16 000006BD 4883EC08            <1>  sub rsp,8
+    17 000006C1 E8(00000000)        <1>  call gets
+    18 000006C6 4883C408            <1>  add rsp,8
+   369 000006CA 803C25[01000000]53          cmp    byte[posicionSiguiente],"S"
+   370 000006D2 0F84D3000000                je     abajoOca
+   371 000006D8 803C25[01000000]41          cmp    byte[posicionSiguiente],"A"
+   372 000006E0 0F84E1000000                je     izquierdaOca
+   373 000006E6 803C25[01000000]44          cmp    byte[posicionSiguiente],"D"
+   374 000006EE 0F84C5000000                je     derechaOca
+   375 000006F4 803C25[01000000]50          cmp    byte[posicionSiguiente],"P"
+   376 000006FC 0F84EDFEFFFF                je     salir
+   377 00000702 E9CF000000                  jmp    printError
+   378                                  
+   379                                  movimientoValidoOca:
+   380                                  
+   381 00000707 488B1425[03000000]          mov     rdx,[nuevaPosicion]
+   382 0000070F 486BD207                    imul    rdx,7
+   383 00000713 488B0425[0B000000]          mov     rax,[nuevaPosicion+8]
+   384 0000071B C68402[77010000]4F          mov     byte[matriz+rdx+rax],"O"
+   385                                  
+   386 00000723 488B1425[13000000]          mov     rdx,[posOca]
+   387 0000072B 486BD207                    imul    rdx,7
+   388 0000072F 488B0425[1B000000]          mov     rax,[posOca+8]
+   389 00000737 C68402[77010000]20          mov     byte[matriz+rdx+rax]," "
+   390                                  
+   391 0000073F 488B1425[03000000]          mov     rdx,[nuevaPosicion]
+   392 00000747 48891425[13000000]          mov     [posOca],rdx
+   393 0000074F 488B1425[0B000000]          mov     rdx,[nuevaPosicion+8]
+   394 00000757 48891425[1B000000]          mov     [posOca+8],rdx
+   395                                  
+   396 0000075F C3                          ret
+   397                                  
+   398                                  calcularMovimientoOca:
+   399 00000760 4C8B2425[13000000]          mov    r12,[posOca]
+   400 00000768 4C8B2C25[1B000000]          mov    r13,[posOca+8]
+   401 00000770 4D01D4                      add    r12,r10
+   402 00000773 4D01DD                      add    r13,r11
+   403 00000776 E82CFEFFFF                  call   verificarSiLaPosicionEsValida
+   404 0000077B 6683F801                    cmp    ax,1
+   405 0000077F 7555                        jne    printError
+   406 00000781 4C892425[03000000]          mov    [nuevaPosicion],r12
+   407 00000789 4C892C25[0B000000]          mov    [nuevaPosicion+8],r13
+   408                                      mHayEspacioLibre? r12, r13
+    54 00000791 4C89E2              <1>  mov rdx,%1
+    55 00000794 486BD207            <1>  imul rdx,7
+    56 00000798 4C89E8              <1>  mov rax,%2
+    57 0000079B 80BC02[77010000]20  <1>  cmp byte[matriz+rdx+rax]," "
+   409 000007A3 0F845EFFFFFF                je     movimientoValidoOca
+   410 000007A9 EB2B                        jmp    printError
+   411                                  
+   412                                  abajoOca:
+   413 000007AB 41BA01000000                mov    r10,1
+   414 000007B1 41BB00000000                mov    r11,0
+   415 000007B7 EBA7                        jmp    calcularMovimientoOca   
+   416                                  
+   417                                  derechaOca:
+   418 000007B9 41BA00000000                mov    r10,0
+   419 000007BF 41BB01000000                mov    r11,1
+   420 000007C5 EB99                        jmp    calcularMovimientoOca  
+   421                                  
+   422                                  izquierdaOca:
+   423 000007C7 41BA00000000                mov    r10,0
+   424 000007CD 49C7C3FFFFFFFF              mov    r11,-1
+   425 000007D4 EB8A                        jmp    calcularMovimientoOca  
+   426                                  
+   427                                  printError:
+   428                                      mPuts txtPosicionInvalida
+     8 000007D6 48BF-               <1>  mov rdi,%1
+     8 000007D8 [6200000000000000]  <1>
+     9 000007E0 4883EC08            <1>  sub rsp,8
+    10 000007E4 E8(00000000)        <1>  call puts
+    11 000007E9 4883C408            <1>  add rsp,8
+   429 000007ED E905FEFFFF                  jmp   moverOca

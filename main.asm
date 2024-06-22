@@ -6,6 +6,14 @@ extern printMatriz
 
 section .data
     bienvenido db  "~~~~~~~~~~ ¡Bienvenido al juego el Zorro y las Ocas! ~~~~~~~~~~",0
+    elegirSimboloZorro db "Elija el símbolo para el zorro: ",0
+    elegirSimboloOcas db "Elija el símbolo para las ocas: ",0
+    elegirOrientacion db "Elija la orientación del tablero (N(Norte)/ S(Sur)/ E(Este)/ O(Oeste): ",0
+    txtPersonalizarSimbolos db "¿Desea personalizar los simbolos del juego? (S/N): ",0
+    txtPersonalizarOrientacion db "¿Desea personalizar la orientación del tablero? (S/N): ",0
+    afirmacion db "S",0
+    negacion db "N",0
+    ocasDistintoAZorro db "El símbolo de las ocas no puede ser igual al del zorro.",0
     txtSiguientePos db "Ingrese la siguiente posición: ",0
     txtPosicionInvalida db "Posicion inválida.",0
     txtCantidadDeOcasMuertas db 10,"Cantidad de ocas muertas: %d",10,0
@@ -15,6 +23,9 @@ section .data
     txtGanoOca db "--------> ¡JUEGO FINALIZADO! Las ocas han ganado. <--------",0
     txtCadaMovimiento db "%d ",0
     formato db "%d %d",0
+    simboloZorro db "X",0
+    simboloOca db "O",0
+    oriecionTrablero db "N",0 ;N : Norte
     matriz db -1,-1,  "O","O","O",  -1,-1,
            db -1,-1,  "O","O","O",  -1,-1,
            db "O","O","O","O","O","O","O",
@@ -43,14 +54,78 @@ section .bss
     nuevaPosicion   resq 2
     posOca      resq 2
     stringAux   resb 20
+    simboloZorroNuevo resb 1
+    simboloOcaNuevo resb 1
+    orientacionNueva resb 1
+    personalizarSimbolos resb 1
+    personalizarOrientacion resb 1
 
 section .text
 
 main:
     mPuts   bienvenido
+
+opcionConfigurarSimbolos:
+    mPuts   txtPersonalizarSimbolos
+    mGets   personalizarSimbolos
+    mov     r15b,[personalizarSimbolos]
+    cmp     r15b,[afirmacion]
+    je      setearZorro
+    jne     opcionOrientacion
+setearZorro:
+    mPuts   elegirSimboloZorro
+    mGets   simboloZorroNuevo
+    jmp setearOcas
+reelegirOca:
+    mPuts   ocasDistintoAZorro
+setearOcas:
+    mPuts   elegirSimboloOcas
+    mGets   simboloOcaNuevo
+    mov    r15b,[simboloZorroNuevo]
+    cmp    r15b,[simboloOcaNuevo]
+    je     reelegirOca
+
+setearMatriz:
+    mov     r15,matriz ;r15 es la direccion de la matriz
+    mov     r12,0 ;indice de la r15
+modificarMatriz:
+    mov     al,[r15+r12]
+    cmp     al,[simboloOca]
+    je      cambiarOca
+    mov     al,[r15+r12]
+    cmp     al,[simboloZorro]
+    je      cambiarZorro
+incrementarIndice:
+    inc     r12
+    cmp     r12,49
+    jne     modificarMatriz
+    je      opcionOrientacion
+cambiarOca:
+    mov     r13b,[simboloOcaNuevo]
+    mov     [r15+r12],r13b
+    jmp     incrementarIndice
+cambiarZorro:
+    mov     r13b,[simboloZorroNuevo]
+    mov     [r15+r12],r13b
+    jmp     incrementarIndice
+
+opcionOrientacion:
+    mPuts   txtPersonalizarOrientacion
+    mGets   personalizarOrientacion
+    mov     r15b,[personalizarOrientacion]
+    cmp     r15b,[afirmacion]
+    jne     setearMatriz
+pedirOrientacion:
+    mPuts   elegirOrientacion
+    mGets   orientacionNueva
+
+mostrarInicio:
     mPuts   controles
     mPrintMatriz matriz
-inicio:
+
+
+inicio:    
+
     mPuts   turnoZorro
     sub     rsp,8
     call    moverZorro
@@ -214,7 +289,7 @@ moverZorro:
     je     sureste
     cmp    byte[posicionSiguiente],"P"
     je     salir
-    jmp    msgMovimientoInvalidoZorro
+    jmp    txtMovimientoInvalidoZorro
 
 movimientoValidoZorro:
 
@@ -244,7 +319,7 @@ calcularMovimientoZorro:
     add    r13,r11
     call   verificarSiLaPosicionEsValida
     cmp    ax,1
-    jne    msgMovimientoInvalidoZorro
+    jne    txtMovimientoInvalidoZorro
     mov    [nuevaPosicion],r12
     mov    [nuevaPosicion+8],r13
     mHayEspacioLibre? r12, r13;me fijo si hay un espacio libre, si no lo hay, es porque estoy tratando de saltar una oca
@@ -253,9 +328,9 @@ calcularMovimientoZorro:
     add    r13,r11
     call   verificarSiLaPosicionEsValida
     cmp    ax,1
-    jne    msgMovimientoInvalidoZorro
+    jne    txtMovimientoInvalidoZorro
     mHayEspacioLibre? r12, r13;si hay una oca, no puedo saltar
-    jne    msgMovimientoInvalidoZorro
+    jne    txtMovimientoInvalidoZorro
     mov    rdx,[nuevaPosicion]
     imul   rdx,7
     mov    rax,[nuevaPosicion+8]
@@ -335,7 +410,7 @@ verificarSiLaPosicionEsValida:
     mov     ax,1;se devuelve 1 si la posición es válida
     ret
 
-msgMovimientoInvalidoZorro:
+txtMovimientoInvalidoZorro:
     mPuts txtPosicionInvalida
     jmp   moverZorro
 
