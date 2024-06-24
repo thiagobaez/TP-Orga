@@ -14,6 +14,7 @@ section .data
     afirmacion db "S",0
     negacion db "N",0
     ocasDistintoAZorro db "El símbolo de las ocas no puede ser igual al del zorro.",0
+    txtOrientacionInvalida db "Orientación inválida.",0
     txtSiguientePos db "Ingrese la siguiente posición: ",0
     txtPosicionInvalida db "Posicion inválida.",0
     txtCantidadDeOcasMuertas db 10,"Cantidad de ocas muertas: %d",10,0
@@ -99,7 +100,7 @@ incrementarIndice:
     inc     r12
     cmp     r12,49
     jne     modificarMatriz
-    je      opcionOrientacion
+    je      setearOcasYZorro
 cambiarOca:
     mov     r13b,[simboloOcaNuevo]
     mov     [r15+r12],r13b
@@ -109,20 +110,111 @@ cambiarZorro:
     mov     [r15+r12],r13b
     jmp     incrementarIndice
 
+setearOcasYZorro:
+    mov     r13b,[simboloOcaNuevo]
+    mov     [simboloOca],r13b
+    mov     r13b,[simboloZorroNuevo]
+    mov    [simboloZorro],r13b
+    jmp     opcionOrientacion
+
 opcionOrientacion:
     mPuts   txtPersonalizarOrientacion
     mGets   personalizarOrientacion
     mov     r15b,[personalizarOrientacion]
     cmp     r15b,[afirmacion]
-    jne     setearMatriz
+    jne     mostrarInicio
+    je      pedirOrientacion
+
+orientacionInvalida:
+    mPuts   txtOrientacionInvalida
+
 pedirOrientacion:
     mPuts   elegirOrientacion
     mGets   orientacionNueva
+    cmp     byte[orientacionNueva],"N"
+    je      mostrarInicio
+    cmp     byte[orientacionNueva],"S"
+    je      cambiarAorientacionSur
+    cmp    byte[orientacionNueva],"E"
+    je     cambiarAorientacionEste
+    cmp    byte[orientacionNueva],"O"
+    je     cambiarAorientacionOeste
+    jmp     orientacionInvalida
+
+cambiarAorientacionSur:
+    mov     r15,matriz ;r15 es la direccion de la matriz
+    mov     r12,0 ;indice de la r15
+    mov     r13,1 ; indice de la columna
+    mov     r14,1 ;indice de la fila
+
+modificarMatrizSur:
+    mov     al,[r15+r12]
+    cmp     al,-1
+    je      incrementarIndiceSur
+    jmp     rellenarTableroSur
+
+incrementarIndiceSur:
+    inc     r13
+    cmp     r13,8
+    je      resetColumnas
+    inc     r12
+    cmp     r12,49
+    je      mostrarInicio
+    jne     modificarMatrizSur
+    
+resetColumnas:
+    mov     r13,0
+    inc     r14 ;incremento la fila
+    jmp     incrementarIndiceSur
+
+rellenarOca:
+    mov     r10b,[simboloOca]
+    cmp     [r15+r12],r10b
+    je      incrementarIndiceSur
+    mov     r10b,[simboloOca]
+    mov     [r15+r12],r10b
+    jmp     incrementarIndiceSur
+
+rellenarZorro:
+    mov     r10b,[simboloZorro]
+    mov     [r15+r12],r10b
+    mov     qword[posZorro],2
+    mov     qword[posZorro+8],3
+    jmp     incrementarIndiceSur
+
+rellenarTableroSur:
+    cmp     r12,17
+    je      rellenarZorro 
+    cmp     r12,1
+    cmp     r14,5
+    je      rellenarOca
+    cmp     r14,6
+    je      rellenarOca
+    cmp     r14,7
+    je      rellenarOca
+    cmp     r13,1
+    je      rellenarOca
+    cmp     r13,7
+    je      rellenarOca
+    jmp     ponerEspacio
+
+ponerEspacio:
+    mov   byte[r15+r12]," "
+    jmp   incrementarIndiceSur
+
+cambiarAorientacionEste:
+    mPuts   orientacionNueva
+    jmp     mostrarInicio
+    ;falta
+
+cambiarAorientacionOeste:
+    mPuts   orientacionNueva
+    jmp     mostrarInicio
+    ;falta
 
 mostrarInicio:
     mPuts   controles
     mPrintMatriz matriz
-
 
 inicio:    
 
@@ -296,7 +388,8 @@ movimientoValidoZorro:
     mov     rdx,[nuevaPosicion]
     imul    rdx,7
     mov     rax,[nuevaPosicion+8]
-    mov     byte[matriz+rdx+rax],"X"
+    mov     r8b,[simboloZorro]
+    mov     byte[matriz+rdx+rax],r8b
 
     mov     rdx,[posZorro]
     imul    rdx,7
@@ -435,7 +528,8 @@ moverOca:
     mov     rdx,[posOca]
     imul    rdx,7
     mov     rax,[posOca+8]
-    cmp     byte[matriz+rdx+rax],"O"
+    mov     r8b,[simboloOca]
+    cmp     byte[matriz+rdx+rax],r8b
     jne     printError ;Comparo el valor de la matriz en la posición ingresada y verifico si hay una oca
     
 seleccionarOpcionOca:
@@ -456,7 +550,8 @@ movimientoValidoOca:
     mov     rdx,[nuevaPosicion]
     imul    rdx,7
     mov     rax,[nuevaPosicion+8]
-    mov     byte[matriz+rdx+rax],"O"
+    mov     r8b,[simboloOca]
+    mov     byte[matriz+rdx+rax],r8b
 
     mov     rdx,[posOca]
     imul    rdx,7
