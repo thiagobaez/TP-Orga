@@ -5,28 +5,54 @@ global main
 extern printMatriz
 
 section .data
-    bienvenido db  "~~~~~~~~~~ ¡Bienvenido al juego el Zorro y las Ocas! ~~~~~~~~~~",0
-    elegirSimboloZorro db "Elija el símbolo para el zorro: ",0
-    elegirSimboloOcas db "Elija el símbolo para las ocas: ",0
-    elegirOrientacion db "Elija la orientación del tablero (N(Norte)/ S(Sur)/ E(Este)/ O(Oeste): ",0
-    txtPersonalizarSimbolos db "¿Desea personalizar los simbolos del juego? (S/N): ",0
-    txtPersonalizarOrientacion db "¿Desea personalizar la orientación del tablero? (S/N): ",0
-    afirmacion db "S",0
-    negacion db "N",0
-    ocasDistintoAZorro db "El símbolo de las ocas no puede ser igual al del zorro.",0
+    txtBienvenido db  "~~~~~~~~~~~~~~~~~~ ¡BIENVENIDO AL JUEGO EL ZORRO Y LAS OCAS! ~~~~~~~~~~~~~~~~~~",0
+    txtBloqMayus db "ATENCIÓN: El bloqueo de mayúsculas debe estar activado para jugar con facilidad.",0
+    txtParaSalirDelJuego db "Para salir del juego puede presionar la tecla 'P' en cualquier instante de la partida.",0
+    txtControles db "Luego de iniciar la partida, podrá acceder a ayuda de comandos al presionar la tecla 'H' en cualquier momento.",0
+    txtComoGuardarPartida db "Se podrá guardar la partida actual inmediatamente luego del turno de cualquiera de los jugadores con la tecla 'G'.",0
+    txtElegirSimboloZorro db "Elija el símbolo para el zorro:",0
+    txtElegirSimboloOcas db "Elija el símbolo para las ocas:",0
+    txtDeseaCargarPartida db "Crear una nueva partida -----> N",10, "Cargar una partida guardada -> C",10, "Salir -----------------------> P",0
+    txtIngreseOpcion db "Ingrese una opción:",0
+    txtElegirOrientacion db "~ Orientaciones del tablero ~",10,"N --> Norte",10,"S --> Sur",10,"E --> Este",10,"O --> Oeste",0
+    txtPersonalizarSimbolos db "¿Desea personalizar los simbolos del juego? (S/N):",0
+    txtPersonalizarOrientacion db "¿Desea personalizar la orientación del tablero? (S/N):",0
+    txtOcasDistintoAZorro db "¡ERROR! El símbolo de las ocas no puede ser igual al del zorro.",0
     txtOrientacionInvalida db "Orientación inválida.",0
-    txtSiguientePos db "Ingrese la siguiente posición: ",0
+    txtOpcionInvalida db "Opción inválida.",0
+    txtSiguientePos db "Ingrese la siguiente posición:",0
     txtPosicionInvalida db "Posicion inválida.",0
     txtCantidadDeOcasMuertas db 10,"Cantidad de ocas muertas: %d",10,0
     txtCantidadMovimientosZorro db "Cantidad de movimientos del zorro:",0
-    txtIngresePosOca db "Ingrese la posición de la oca a mover (<fila> <columna>): ",0
+    txtIngresePosOca db "Ingrese la posición de la oca a mover (<fila> <columna>):",0
     txtGanoZorro db "--------> ¡JUEGO FINALIZADO! El zorro ha ganado. <--------",0
     txtGanoOca db "--------> ¡JUEGO FINALIZADO! Las ocas han ganado. <--------",0
+    txtNombrePartidaGuardar db "Ingrese un nombre para guardar la partida:",0
+    txtErrorAlAbrirArchivo db "Error al abrir el archivo.",0
+    txtNombrePartidaAbrir db "Ingrese el archivo de la partida a cargar:",0
     txtCadaMovimiento db "%d ",0
+    txtNombreDeLaPartidaCargada db "~~~~~~~~~ Partida: %s ~~~~~~~~~",10,0
+    turnoZorro db "~~~~~~ Turno del zorro ~~~~~~",0
+    turnoOca db "~~~~~~ Turno de la oca ~~~~~~",0
+    txtGoodBye db "Good-Bye!",0
     formato db "%d %d",0
-    simboloZorro db "X",0
-    simboloOca db "O",0
-    oriecionTrablero db "N",0 ;N : Norte
+    modoEscritura db "wb",0
+    modoLectura db "rb",0
+    simboloZorro db "X"
+    simboloOca db "O"
+    orientancionTablero db "N"
+    cantOcasMuertas db 0
+    cantMovimientosZorro times 8 db 0
+    posZorro dq 4,3
+    controles db "~~ CONTROLES ~~",10,
+              db "Arriba:    W",10,"Abajo:     S",10,
+              db "Izquierda: A",10,"Derecha:   D",10,
+              db "Noroeste:  Q",10,"Noreste:   E",10,
+              db "Suroeste:  Z",10,"Sureste:   X",10,
+              db "Salir:     P",10,"Guardar:   G",10,0
+    formatoEstadisticas db "%c: %d | ",0
+    letrasEstadisticas db "W","S","D","A","Q","E","Z","X",0
+    salirFlag db 0
     matriz db -1,-1,  "O","O","O",  -1,-1,
            db -1,-1,  "O","O","O",  -1,-1,
            db "O","O","O","O","O","O","O",
@@ -34,66 +60,160 @@ section .data
            db "O"," "," ","X"," "," ","O",
            db -1,-1,  " "," "," ",  -1,-1,
            db -1,-1,  " "," "," ",  -1,-1
-    cantOcasMuertas db 0
-    cantMovimientosZorro times 8 db 0
-    posZorro dq 4,3
-    turnoZorro db "~~~~~~ Turno del zorro ~~~~~~",0
-    turnoOca db "~~~~~~ Turno de la oca ~~~~~~",0
-    controles db "CONTROLES",10,
-              db "Arriba:    W",10,"Abajo:     S",10,
-              db "Izquierda: A",10,"Derecha:   D",10,
-              db "Noroeste:  Q",10,"Noreste:   E",10,
-              db "Suroeste:  Z",10,"Sureste:   X",10,
-              db "Salir:     P",0
-    formatoEstadisticas db "%c: %d | ",0
-    letrasEstadisticas db "W","S","D","A","Q","E","Z","X",0
-    salirFlag db 0
+
+    orSur  db -1,-1,  " "," "," ",  -1,-1,
+           db -1,-1,  " "," "," ",  -1,-1,
+           db "O"," "," ","X"," "," ","O",
+           db "O"," "," "," "," "," ","O",
+           db "O","O","O","O","O","O","O",
+           db -1,-1,  "O","O","O",  -1,-1,
+           db -1,-1,  "O","O","O",  -1,-1
+
+    orEste db -1,-1,  "O","O","O",  -1,-1,
+           db -1,-1,  " "," ","O",  -1,-1,
+           db " "," "," "," ","O","O","O",
+           db " "," ","X"," ","O","O","O",
+           db " "," "," "," ","O","O","O",
+           db -1,-1,  " "," ","O",  -1,-1,
+           db -1,-1,  "O","O","O",  -1,-1
+
+   orOeste db -1,-1,  "O","O","O",  -1,-1,
+           db -1,-1,  "O"," "," ",  -1,-1,
+           db "O","O","O"," "," "," "," ",
+           db "O","O","O"," ","X"," "," ",
+           db "O","O","O"," "," "," "," ",
+           db -1,-1,  "O"," "," ",  -1,-1,
+           db -1,-1,  "O","O","O",  -1,-1   
 
 section .bss
     zorroAcabaDeComerOca? resb 1  
     posicionSiguiente resb 2
     nuevaPosicion   resq 2
     posOca      resq 2
-    stringAux   resb 20
-    simboloZorroNuevo resb 1
-    simboloOcaNuevo resb 1
-    orientacionNueva resb 1
-    personalizarSimbolos resb 1
-    personalizarOrientacion resb 1
+    stringAux   resb 30
+    simboloZorroNuevo resw 2
+    simboloOcaNuevo resw 2
+    opcion resw 4
+    turnoActual resb 1
 
 section .text
 
 main:
-    mPuts   bienvenido
+    mPuts   txtBienvenido
+    mPuts   txtBloqMayus
+    mPuts   txtControles
+    mPuts   txtParaSalirDelJuego
+    mPuts   txtComoGuardarPartida
+    mPuts   txtDeseaCargarPartida
+ingreseOpcion:
+    mPuts   txtIngreseOpcion
+    mGets   opcion
+    cmp     byte[opcion],"N"
+    je      opcionOrientacion
+    cmp     byte[opcion],"P"
+    je      salir
+    cmp     byte[opcion],"C"
+    je      cargarPartida
+    jmp     opcionInvalida
+
+
+opcionInvalida:
+    mPuts   txtOpcionInvalida
+    jmp     ingreseOpcion
+
+opcionOrientacion:
+    mPuts   txtPersonalizarOrientacion
+    mGets   opcion
+    cmp     byte[opcion],"S"
+    je      pedirOrientacion
+    cmp     byte[opcion],"N"
+    je      opcionConfigurarSimbolos
+    cmp     byte[opcion],"P"
+    je      salir
+    jmp     opcionOrientacion
+
+orientacionInvalida:
+    mPuts   txtOrientacionInvalida
+
+pedirOrientacion:
+    mPuts   txtElegirOrientacion
+    mPuts   txtIngreseOpcion
+    mGets   opcion
+    cmp     byte[opcion],"N"
+    je      mostrarInicio
+    cmp     byte[opcion],"S"
+    je      cambiarAorientacionSur
+    cmp     byte[opcion],"E"
+    je      cambiarAorientacionEste
+    cmp     byte[opcion],"O"
+    je      cambiarAorientacionOeste
+    jmp     orientacionInvalida
+
+cambiarAorientacionSur:
+    mov     r12,0
+    mov     r13,orSur
+    mov     byte[orientancionTablero],"S"
+    mov     qword[posZorro],2
+    mov     qword[posZorro+8],3
+    jmp     loopOrientacion   
+
+cambiarAorientacionEste:
+    mov     r12,0
+    mov     r13,orEste
+    mov     byte[orientancionTablero],"E"
+    mov     qword[posZorro],3
+    mov     qword[posZorro+8],2
+    jmp     loopOrientacion    
+
+cambiarAorientacionOeste:
+    mov     r12,0
+    mov     r13,orOeste
+    mov     byte[orientancionTablero],"O"
+    mov     qword[posZorro],3
+    mov     qword[posZorro+8],4
+    jmp     loopOrientacion
+
+loopOrientacion:
+    mov     al,[r13+r12]
+    mov     [matriz+r12],al
+    inc     r12
+    cmp     r12,49
+    jne     loopOrientacion
+
+;--------------------------------------------------
 
 opcionConfigurarSimbolos:
     mPuts   txtPersonalizarSimbolos
-    mGets   personalizarSimbolos
-    mov     r15b,[personalizarSimbolos]
-    cmp     r15b,[afirmacion]
+    mGets   opcion
+    cmp     byte[opcion],"S"
     je      setearZorro
-    jne     opcionOrientacion
+    cmp     byte[opcion],"N"
+    je      mostrarInicio
+    cmp     byte[opcion],"P"
+    je      salir
+    jmp     opcionConfigurarSimbolos
+
 setearZorro:
-    mPuts   elegirSimboloZorro
+    mPuts   txtElegirSimboloZorro
     mGets   simboloZorroNuevo
-    jmp setearOcas
-reelegirOca:
-    mPuts   ocasDistintoAZorro
 setearOcas:
-    mPuts   elegirSimboloOcas
+    mPuts   txtElegirSimboloOcas
     mGets   simboloOcaNuevo
-    mov    r15b,[simboloZorroNuevo]
-    cmp    r15b,[simboloOcaNuevo]
-    je     reelegirOca
+    mov     r15b,[simboloZorroNuevo]
+    cmp     r15b,[simboloOcaNuevo]
+    jne     setearMatriz
+
+reelegirOca:
+    mPuts   txtOcasDistintoAZorro
+    jmp     setearZorro
 
 setearMatriz:
-    mov     r15,matriz ;r15 es la direccion de la matriz
-    mov     r12,0 ;indice de la r15
+    mov     r12,0 ;indice de la matriz
 modificarMatriz:
-    mov     al,[r15+r12]
+    mov     al,[matriz+r12]
     cmp     al,[simboloOca]
     je      cambiarOca
-    mov     al,[r15+r12]
+    mov     al,[matriz+r12]
     cmp     al,[simboloZorro]
     je      cambiarZorro
 incrementarIndice:
@@ -103,114 +223,19 @@ incrementarIndice:
     je      setearOcasYZorro
 cambiarOca:
     mov     r13b,[simboloOcaNuevo]
-    mov     [r15+r12],r13b
+    mov     [matriz+r12],r13b
     jmp     incrementarIndice
 cambiarZorro:
     mov     r13b,[simboloZorroNuevo]
-    mov     [r15+r12],r13b
+    mov     [matriz+r12],r13b
     jmp     incrementarIndice
 
 setearOcasYZorro:
     mov     r13b,[simboloOcaNuevo]
     mov     [simboloOca],r13b
     mov     r13b,[simboloZorroNuevo]
-    mov    [simboloZorro],r13b
-    jmp     opcionOrientacion
+    mov     [simboloZorro],r13b
 
-opcionOrientacion:
-    mPuts   txtPersonalizarOrientacion
-    mGets   personalizarOrientacion
-    mov     r15b,[personalizarOrientacion]
-    cmp     r15b,[afirmacion]
-    jne     mostrarInicio
-    je      pedirOrientacion
-
-orientacionInvalida:
-    mPuts   txtOrientacionInvalida
-
-pedirOrientacion:
-    mPuts   elegirOrientacion
-    mGets   orientacionNueva
-    cmp     byte[orientacionNueva],"N"
-    je      mostrarInicio
-    cmp     byte[orientacionNueva],"S"
-    je      cambiarAorientacionSur
-    cmp    byte[orientacionNueva],"E"
-    je     cambiarAorientacionEste
-    cmp    byte[orientacionNueva],"O"
-    je     cambiarAorientacionOeste
-    jmp     orientacionInvalida
-
-cambiarAorientacionSur:
-    mov     r15,matriz ;r15 es la direccion de la matriz
-    mov     r12,0 ;indice de la r15
-    mov     r13,1 ; indice de la columna
-    mov     r14,1 ;indice de la fila
-
-modificarMatrizSur:
-    mov     al,[r15+r12]
-    cmp     al,-1
-    je      incrementarIndiceSur
-    jmp     rellenarTableroSur
-
-incrementarIndiceSur:
-    inc     r13
-    cmp     r13,8
-    je      resetColumnas
-    inc     r12
-    cmp     r12,49
-    je      mostrarInicio
-    jne     modificarMatrizSur
-    
-resetColumnas:
-    mov     r13,0
-    inc     r14 ;incremento la fila
-    jmp     incrementarIndiceSur
-
-rellenarOca:
-    mov     r10b,[simboloOca]
-    cmp     [r15+r12],r10b
-    je      incrementarIndiceSur
-    mov     r10b,[simboloOca]
-    mov     [r15+r12],r10b
-    jmp     incrementarIndiceSur
-
-rellenarZorro:
-    mov     r10b,[simboloZorro]
-    mov     [r15+r12],r10b
-    mov     qword[posZorro],2
-    mov     qword[posZorro+8],3
-    jmp     incrementarIndiceSur
-
-rellenarTableroSur:
-    cmp     r12,17
-    je      rellenarZorro 
-    cmp     r12,1
-    cmp     r14,5
-    je      rellenarOca
-    cmp     r14,6
-    je      rellenarOca
-    cmp     r14,7
-    je      rellenarOca
-    cmp     r13,1
-    je      rellenarOca
-    cmp     r13,7
-    je      rellenarOca
-    jmp     ponerEspacio
-
-ponerEspacio:
-    mov   byte[r15+r12]," "
-    jmp   incrementarIndiceSur
-
-cambiarAorientacionEste:
-    mPuts   orientacionNueva
-    jmp     mostrarInicio
-    ;falta
-
-cambiarAorientacionOeste:
-    mPuts   orientacionNueva
-    jmp     mostrarInicio
-    ;falta
 
 mostrarInicio:
     mPuts   controles
@@ -229,7 +254,7 @@ inicio:
     je      printGanoZorro
     cmp     byte[zorroAcabaDeComerOca?],1
     je      inicio
-
+turnoLaOca:
     mPuts   turnoOca
     sub     rsp,8
     call    moverOca
@@ -358,6 +383,9 @@ elZorroNoEstaAcorralado:
     mov     bx,0
     ret
 
+mostrarHelpEnZorro:
+    mPuts   controles
+
 moverZorro:
     mov    byte[zorroAcabaDeComerOca?],0
     mPuts  txtSiguientePos
@@ -381,6 +409,10 @@ moverZorro:
     je     sureste
     cmp    byte[posicionSiguiente],"P"
     je     salir
+    cmp    byte[posicionSiguiente],"G"
+    je     llamarGuardarPartidaEnZorro
+    cmp    byte[posicionSiguiente],"H"
+    je     mostrarHelpEnZorro
     jmp    txtMovimientoInvalidoZorro
 
 movimientoValidoZorro:
@@ -401,7 +433,7 @@ movimientoValidoZorro:
     mov     rdx,[nuevaPosicion+8]
     mov     [posZorro+8],rdx
 
-    inc    byte[r15]
+    inc     byte[r15]
 
     ret
 
@@ -504,21 +536,29 @@ verificarSiLaPosicionEsValida:
     ret
 
 txtMovimientoInvalidoZorro:
-    mPuts txtPosicionInvalida
-    jmp   moverZorro
+    mPuts   txtPosicionInvalida
+    jmp     moverZorro
 
 salir:
-    inc byte[salirFlag]
+    inc     byte[salirFlag]
+    mPuts   txtGoodBye
     ret
 
 
 ;-------------------------------- OCA ----------------------------------------- 
+
+mostrarHelpEnOca:
+    mPuts   controles
 
 moverOca:
     mPuts   txtIngresePosOca
     mGets   stringAux
     cmp     byte[stringAux],"P"
     je      salir
+    cmp     byte[stringAux],"G"
+    je      llamarGuardarPartidaEnOca
+    cmp     byte[stringAux],"H"
+    je      mostrarHelpEnOca
     mSscanf2 stringAux,formato,posOca,posOca+8
     cmp     rax,2
     jne     moverOca
@@ -530,20 +570,25 @@ moverOca:
     mov     rax,[posOca+8]
     mov     r8b,[simboloOca]
     cmp     byte[matriz+rdx+rax],r8b
-    jne     printError ;Comparo el valor de la matriz en la posición ingresada y verifico si hay una oca
-    
+    jne     printErrorOca ;Comparo el valor de la matriz en la posición ingresada y verifico si hay una oca
+
 seleccionarOpcionOca:
     mPuts  txtSiguientePos
     mGets  posicionSiguiente
-    cmp    byte[posicionSiguiente],"S"
-    je     abajoOca
-    cmp    byte[posicionSiguiente],"A"
-    je     izquierdaOca
-    cmp    byte[posicionSiguiente],"D"
-    je     derechaOca
     cmp    byte[posicionSiguiente],"P"
     je     salir
-    jmp    printError
+    cmp    byte[posicionSiguiente],"G"
+    je     llamarGuardarPartidaEnOca
+    cmp    byte[posicionSiguiente],"H"
+    je     mostrarHelpEnOca
+    cmp    byte[orientancionTablero],"N"
+    je     movimientoOcaConTableroNorte
+    cmp    byte[orientancionTablero],"S"
+    je     movimientoOcaConTableroSur
+    cmp    byte[orientancionTablero],"E"
+    je     movimientoOcaConTableroEste
+    cmp    byte[orientancionTablero],"O"
+    je     movimientoOcaConTableroOeste
 
 movimientoValidoOca:
 
@@ -572,12 +617,61 @@ calcularMovimientoOca:
     add    r13,r11
     call   verificarSiLaPosicionEsValida
     cmp    ax,1
-    jne    printError
+    jne    printErrorOca
     mov    [nuevaPosicion],r12
     mov    [nuevaPosicion+8],r13
     mHayEspacioLibre? r12, r13
     je     movimientoValidoOca
-    jmp    printError
+    jmp    printErrorOca
+
+movimientoOcaConTableroNorte:
+
+    cmp    byte[posicionSiguiente],"S"
+    je     abajoOca
+    cmp    byte[posicionSiguiente],"A"
+    je     izquierdaOca
+    cmp    byte[posicionSiguiente],"D"
+    je     derechaOca
+
+    jmp    printErrorOca
+
+movimientoOcaConTableroSur:
+
+    cmp    byte[posicionSiguiente],"W"
+    je     arribaOca
+    cmp    byte[posicionSiguiente],"A"
+    je     izquierdaOca
+    cmp    byte[posicionSiguiente],"D"
+    je     derechaOca
+
+    jmp    printErrorOca
+
+movimientoOcaConTableroEste:
+
+    cmp    byte[posicionSiguiente],"A"
+    je     izquierdaOca
+    cmp    byte[posicionSiguiente],"W"
+    je     arribaOca
+    cmp    byte[posicionSiguiente],"S"
+    je     abajoOca
+
+    jmp    printErrorOca
+
+movimientoOcaConTableroOeste:
+
+    cmp    byte[posicionSiguiente],"D"
+    je     derechaOca
+    cmp    byte[posicionSiguiente],"W"
+    je     arribaOca
+    cmp    byte[posicionSiguiente],"S"
+    je     abajoOca
+
+    jmp    printErrorOca
+
+arribaOca:
+    mov    r10,-1
+    mov    r11,0
+    jmp    calcularMovimientoOca
 
 abajoOca:
     mov    r10,1
@@ -594,6 +688,88 @@ izquierdaOca:
     mov    r11,-1
     jmp    calcularMovimientoOca  
 
-printError:
+printErrorOca:
     mPuts txtPosicionInvalida
     jmp   moverOca
+
+;----------------------------------- GUARDAR PARTIDA
+
+llamarGuardarPartidaEnZorro:
+    mov     byte[turnoActual],1
+    sub     rsp,8
+    call    guardarPartida
+    add     rsp,8
+    jmp     moverZorro
+
+llamarGuardarPartidaEnOca:
+    mov     byte[turnoActual],0
+    sub     rsp,8
+    call    guardarPartida
+    add     rsp,8
+    jmp     moverOca
+
+
+guardarPartida:
+    mPuts   txtNombrePartidaGuardar
+    mGets   stringAux
+    
+    mFopen  stringAux,modoEscritura
+    cmp     rax,0
+    je      errorAlAbrirArchivo
+
+    mov     r12,rax 
+    
+    mFwrite matriz,1,49,r12
+    mFwrite simboloZorro,1,1,r12
+    mFwrite simboloOca,1,1,r12
+    mFwrite orientancionTablero,1,1,r12
+    mFwrite cantOcasMuertas,1,1,r12
+    mFwrite cantMovimientosZorro,1,8,r12
+    mFwrite posZorro,8,2,r12
+    mFwrite turnoActual,1,1,r12
+
+    mFclose r12
+
+    ret
+
+errorAlCrearArchivo:
+    mPuts   txtErrorAlAbrirArchivo
+    jmp     guardarPartida
+     
+;----------------------------------- CARGAR PARTIDA
+
+cargarPartida:
+
+    mPuts   txtNombrePartidaAbrir
+    mGets   stringAux
+
+    mFopen  stringAux,modoLectura
+    cmp     rax,0
+    je      errorAlAbrirArchivo
+
+    mov     r12,rax
+
+    mFread  matriz,1,49,r12
+    mFread  simboloZorro,1,1,r12
+    mFread  simboloOca,1,1,r12
+    mFread  orientancionTablero,1,1,r12
+    mFread  cantOcasMuertas,1,1,r12
+    mFread  cantMovimientosZorro,1,8,r12
+    mFread  posZorro,8,2,r12
+    mFread  turnoActual,1,1,r12
+
+    mFclose r12
+    mov     rdi,txtNombreDeLaPartidaCargada
+    mov     rsi,stringAux
+    mPrintf 
+
+    mPuts   controles
+    mPrintMatriz matriz
+    cmp     byte[turnoActual],1
+    je      inicio
+    jmp     turnoLaOca
+
+errorAlAbrirArchivo:
+
+    mPuts   txtErrorAlAbrirArchivo
+    jmp     cargarPartida    
