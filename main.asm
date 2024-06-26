@@ -772,4 +772,4 @@ cargarPartida:
 errorAlAbrirArchivo:
 
     mPuts   txtErrorAlAbrirArchivo
-    jmp     cargarPartida    
+    jmp     ingreseOpcion    
