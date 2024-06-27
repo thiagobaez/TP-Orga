@@ -30,8 +30,10 @@ section .data
     txtNombrePartidaGuardar db "Ingrese un nombre para guardar la partida:",0
     txtErrorAlAbrirArchivo db "Error al abrir el archivo.",0
     txtNombrePartidaAbrir db "Ingrese el archivo de la partida a cargar:",0
+    txtExitoPartidaGuardada db "¡EXITO! La partida se ha guardado correctamente.",0
     txtCadaMovimiento db "%d ",0
-    txtNombreDeLaPartidaCargada db "~~~~~~~~~ Partida: %s ~~~~~~~~~",10,0
+    txtNombreDeLaPartidaCargada db "============ Partida: %s ============",10,0
+    txtPartidaIniciada db "============ Partida iniciada ============",0
     turnoZorro db "~~~~~~ Turno del zorro ~~~~~~",0
     turnoOca db "~~~~~~ Turno de la oca ~~~~~~",0
     txtGoodBye db "Good-Bye!",0
@@ -44,12 +46,12 @@ section .data
     cantOcasMuertas db 0
     cantMovimientosZorro times 8 db 0
     posZorro dq 4,3
-    controles db "~~ CONTROLES ~~",10,
-              db "Arriba:    W",10,"Abajo:     S",10,
-              db "Izquierda: A",10,"Derecha:   D",10,
-              db "Noroeste:  Q",10,"Noreste:   E",10,
-              db "Suroeste:  Z",10,"Sureste:   X",10,
-              db "Salir:     P",10,"Guardar:   G",10,0
+    controles db "              ~~ CONTROLES ~~",10,10,
+              db "   Arriba:       W",10,"   Abajo:        S",10,
+              db "   Izquierda:    A",10,"   Derecha:      D",10,
+              db "   Noroeste:     Q",10,"   Noreste:      E",10,
+              db "   Suroeste:     Z",10,"   Sureste:      X",10,
+              db "   Salir:        P",10,"   Guardar:      G",10,0
     formatoEstadisticas db "%c: %d | ",0
     letrasEstadisticas db "W","S","D","A","Q","E","Z","X",0
     salirFlag db 0
@@ -238,6 +240,7 @@ setearOcasYZorro:
 
 
 mostrarInicio:
+    mPuts   txtPartidaIniciada
     mPuts   controles
     mPrintMatriz matriz
 
@@ -729,6 +732,7 @@ guardarPartida:
     mFwrite turnoActual,1,1,r12
 
     mFclose r12
+    mPuts   txtExitoPartidaGuardada
 
     ret
 
