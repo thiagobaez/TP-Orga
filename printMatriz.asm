@@ -63,13 +63,13 @@ ponerNumerosColumnas:
     mov    rdi,cadena
     mov    rsi,cuatroEspacios
     mPrintf
-    mov    r11,0
+    mov    r14,0
 numeroColumnaLoop:
-    inc    r11
+    inc    r14
     mov    rdi,formatNumero
-    mov    rsi,r11
+    mov    rsi,r14
     mPrintf
-    cmp    r11,7
+    cmp    r14,7
     jl     numeroColumnaLoop
     mov    rdi,cadena
     mov    rsi,saltoLinea
@@ -78,13 +78,13 @@ numeroColumnaLoop:
     mov    rdi,cadena
     mov    rsi,cuatroEspacios
     mPrintf
-    mov    r11,0
+    mov    r14,0
 pipeLoop:
-    inc    r11
+    inc    r14
     mov    rdi,pipe
-    mov    rsi,r11
+    mov    rsi,r14
     mPrintf
-    cmp    r11,7
+    cmp    r14,7
     jl     pipeLoop
     mov    rdi,cadena
     mov    rsi,saltoLinea
@@ -93,13 +93,13 @@ pipeLoop:
     mov    rdi,cadena
     mov    rsi,cuatroEspacios
     mPrintf
-    mov    r11,0
+    mov    r14,0
 flechaLoop:
-    inc    r11
+    inc    r14
     mov    rdi,vCorta
-    mov    rsi,r11
+    mov    rsi,r14
     mPrintf
-    cmp    r11,7
+    cmp    r14,7
     jl     flechaLoop
     mov    rdi,cadena
     mov    rsi,saltoLinea
