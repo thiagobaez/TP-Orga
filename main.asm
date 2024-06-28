@@ -22,11 +22,11 @@ section .data
     txtOpcionInvalida db "Opción inválida.",0
     txtSiguientePos db "Ingrese la siguiente posición:",0
     txtPosicionInvalida db "Posicion inválida.",0
-    txtCantidadDeOcasMuertas db 10,"Cantidad de ocas muertas: %d",10,0
+    txtCantidadDeOcasMuertas db "Cantidad de ocas muertas: %d",10,0
     txtCantidadMovimientosZorro db "Cantidad de movimientos del zorro:",0
     txtIngresePosOca db "Ingrese la posición de la oca a mover (<fila> <columna>):",0
     txtGanoZorro db "--------> ¡JUEGO FINALIZADO! El zorro ha ganado. <--------",0
-    txtGanoOca db "--------> ¡JUEGO FINALIZADO! Las ocas han ganado. <--------",0
+    txtGanoOca db "--------> ¡JUEGO FINALIZADO! Las ocas han acorralado al zorro. <--------",0
     txtNombrePartidaGuardar db "Ingrese un nombre para guardar la partida:",0
     txtErrorAlAbrirArchivo db "Error al abrir el archivo.",0
     txtNombrePartidaAbrir db "Ingrese el archivo de la partida a cargar:",0
@@ -36,13 +36,15 @@ section .data
     txtPartidaIniciada db "============ Partida iniciada ============",0
     turnoZorro db "~~~~~~ Turno del zorro ~~~~~~",0
     turnoOca db "~~~~~~ Turno de la oca ~~~~~~",0
+    txtOrientacionActual db "Orientación actual del tablero: %s",10,0
     txtGoodBye db "Good-Bye!",0
+    txtEspacio db " ",0
     formato db "%d %d",0
     modoEscritura db "wb",0
     modoLectura db "rb",0
     simboloZorro db "X"
     simboloOca db "O"
-    orientancionTablero db "N"
+    orientancionTablero db "N",0
     cantOcasMuertas db 0
     cantMovimientosZorro times 8 db 0
     posZorro dq 4,3
@@ -288,11 +290,13 @@ printGanoOca:
     ret
 
 mostrarEstadisticas:
+    mov     rdi,txtCantidadDeOcasMuertas
+    movzx   rsi,byte[cantOcasMuertas]
+    mPrintf
 
     mPuts   txtCantidadMovimientosZorro
     mov     r14,0
 loopEstadisticas:
- 
     mov     rdi,formatoEstadisticas
     movzx   rsi,byte[letrasEstadisticas+r14]
     movzx   rdx,byte[cantMovimientosZorro+r14]
@@ -300,10 +304,7 @@ loopEstadisticas:
     inc     r14
     cmp     r14,8
     jne     loopEstadisticas
-
-    mov     rdi,txtCantidadDeOcasMuertas
-    movzx   rsi,byte[cantOcasMuertas]
-    mPrintf
+    mPuts   txtEspacio
 
     ret
 
@@ -436,7 +437,7 @@ movimientoValidoZorro:
     mov     rdx,[nuevaPosicion+8]
     mov     [posZorro+8],rdx
 
-    inc     byte[r15]
+    inc     byte[r15] ;r15 = cantMovimientosZorro+2
 
     ret
 
@@ -472,7 +473,7 @@ calcularMovimientoZorro:
 arriba:
     mov    r10,-1
     mov    r11,0
-    mov    r15,cantMovimientosZorro
+    mov    r15,cantMovimientosZorro+0
     jmp    calcularMovimientoZorro
  
 abajo:
@@ -716,7 +717,7 @@ guardarPartida:
     mPuts   txtNombrePartidaGuardar
     mGets   stringAux
     
-    mFopen  stringAux,modoEscritura
+    mFopen  stringAux,modoEscritura 
     cmp     rax,0
     je      errorAlAbrirArchivo
 
@@ -763,9 +764,14 @@ cargarPartida:
     mFread  turnoActual,1,1,r12
 
     mFclose r12
+
     mov     rdi,txtNombreDeLaPartidaCargada
     mov     rsi,stringAux
     mPrintf 
+
+    mov     rdi,txtOrientacionActual
+    mov     rsi,orientancionTablero
+    mPrintf
 
     mPuts   controles
     mPrintMatriz matriz

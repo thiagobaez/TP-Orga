@@ -58,19 +58,19 @@ imprimirSalto:
     je      continuar
     mImprimirNumeroFila
     jmp     continuar
-
+;---------------------------------------
 ponerNumerosColumnas:
     mov    rdi,cadena
     mov    rsi,cuatroEspacios
     mPrintf
     mov    r11,0
-aca:
+numeroColumnaLoop:
     inc    r11
     mov    rdi,formatNumero
     mov    rsi,r11
     mPrintf
     cmp    r11,7
-    jl     aca
+    jl     numeroColumnaLoop
     mov    rdi,cadena
     mov    rsi,saltoLinea
     mPrintf
