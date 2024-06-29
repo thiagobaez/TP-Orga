@@ -437,15 +437,15 @@ movimientoValidoZorro:
     mov     rdx,[nuevaPosicion+8]
     mov     [posZorro+8],rdx
 
-    inc     byte[r15] ;r15 = cantMovimientosZorro+2
+    inc     byte[r15] 
 
     ret
 
 calcularMovimientoZorro:
-    mov    r12,[posZorro]
-    mov    r13,[posZorro+8]
-    add    r12,r10
-    add    r13,r11
+    mov    r12,[posZorro] ; r12 = fila actual del zorro
+    mov    r13,[posZorro+8] ;r13 = columna actual del zorro
+    add    r12,r10 ;sumo la fila actual con el movimiento que quiero hacer
+    add    r13,r11 ;sumo la columna actual con el movimiento que quiero hacer
     call   verificarSiLaPosicionEsValida
     cmp    ax,1
     jne    txtMovimientoInvalidoZorro
@@ -460,9 +460,9 @@ calcularMovimientoZorro:
     jne    txtMovimientoInvalidoZorro
     mHayEspacioLibre? r12, r13;si hay una oca, no puedo saltar
     jne    txtMovimientoInvalidoZorro
-    mov    rdx,[nuevaPosicion]
+    mov    rdx,[nuevaPosicion] ;fila donde esta posicionada la oca actualmente
     imul   rdx,7
-    mov    rax,[nuevaPosicion+8]
+    mov    rax,[nuevaPosicion+8]; columna donde esta posicionada la oca actualmente
     mov    byte[matriz+rdx+rax]," "
     mov    [nuevaPosicion],r12
     mov    [nuevaPosicion+8],r13
@@ -473,7 +473,7 @@ calcularMovimientoZorro:
 arriba:
     mov    r10,-1
     mov    r11,0
-    mov    r15,cantMovimientosZorro+0
+    mov    r15,cantMovimientosZorro
     jmp    calcularMovimientoZorro
  
 abajo:
@@ -606,11 +606,6 @@ movimientoValidoOca:
     imul    rdx,7
     mov     rax,[posOca+8]
     mov     byte[matriz+rdx+rax]," "
-
-    mov     rdx,[nuevaPosicion]
-    mov     [posOca],rdx
-    mov     rdx,[nuevaPosicion+8]
-    mov     [posOca+8],rdx
 
     ret
 
