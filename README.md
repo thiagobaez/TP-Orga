@@ -1,4 +1,4 @@
-# TP-Orga
+# TP-Orga (GRUPO 1)
 
 Para ensamblar, compilar y ejecutar:
 ```bash
