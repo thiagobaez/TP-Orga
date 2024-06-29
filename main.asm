@@ -144,7 +144,7 @@ pedirOrientacion:
     mPuts   txtIngreseOpcion
     mGets   opcion
     cmp     byte[opcion],"N"
-    je      mostrarInicio
+    je      opcionConfigurarSimbolos
     cmp     byte[opcion],"S"
     je      cambiarAorientacionSur
     cmp     byte[opcion],"E"
